@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Material Flow Portal</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .button-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
+    button {
+      padding: 15px 30px;
+      font-size: 16px; 
+      cursor: pointer;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+    button:hover { 
+      background-color: #2980b9; 
+    }
+  </style>
+</head>
+<body>
+  <h1>Material Flow Portal</h1>
+  <div class="button-container">
+    <button onclick="window.location.href='receiver.html'">Receivers</button>
+    <button onclick="window.location.href='handler.html'">Handlers</button>
+    <button onclick="window.location.href='enduser.html'">End Users</button>
+    <button onclick="window.location.href='dashboard.html'">Dashboard</button>
+    <button onclick="window.location.href='admin.html'">Admin</button>
+  </div>
+</body>
+</html>

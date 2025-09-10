@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>API Test</title>
+</head>
+<body>
+  <h2>Click to test connection</h2>
+  <button onclick="testAPI()">Test Backend</button>
+
+  <script>
+    function testAPI() {
+      fetch('http://localhost:5000')
+        .then(res => res.text())
+        .then(msg => alert('✅ Backend says: ' + msg))
+        .catch(err => alert('❌ Error: ' + err.message));
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Handler Portal (B)</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; padding: 20px; }
+    .container { 
+      max-width: 1000px; 
+      margin: auto; 
+      background: #fff; 
+      padding: 25px 30px; 
+      border-radius: 8px; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08); 
+      position: relative;
+    }
+    h1, h2 { color: #2c3e50; }
+    select, input, button { width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+    button { background-color: #3498db; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #2980b9; }
+    .tabs { display: flex; margin-bottom: 20px; }
+    .tab { padding: 10px 20px; cursor: pointer; background-color: #e0e0e0; margin-right: 10px; border-radius: 5px 5px 0 0; }
+    .tab.active { background-color: #3498db; color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .success { color: green; font-weight: bold; margin-top: 10px; }
+    .error { color: red; font-weight: bold; margin-top: 10px; }
+    label { display: block; margin-top: 10px; font-weight: 500; }
+    .material-details { margin-top: 20px; padding: 15px; border: 1px solid #eee; border-radius: 4px; }
+    .material-details p { margin: 5px 0; }
+    .otp-highlight { 
+      font-size: 18px; 
+      font-weight: bold; 
+      background-color: #ffff99; 
+      color: #000000; 
+      padding: 5px; 
+      border: 1px solid #ccc; 
+      display: inline-block; 
+    }
+    .section { margin-top: 20px; padding-top: 12px; border-top: 1px solid #eee; }
+    #logoutBtn { 
+      background-color: #e74c3c; 
+      padding: 8px 16px;
+      font-size: 14px;
+      position: absolute;
+      top: 10px; 
+      right: 10px; 
+      width: auto;
+    }
+    #logoutBtn:hover { background-color: #c0392b; }
+    #mainContent { display: none; }
+    #loginForm { display: block; }
+    .item-group { border: 1px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 4px; }
+    .remove-item { width: auto; background-color: #e74c3c; margin-top: 10px; }
+    .remove-item:hover { background-color: #c0392b; }
+    .uat-status table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .uat-status th, .uat-status td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    .uat-status th { background-color: #f2f2f2; }
+    .uat-status .accepted { color: #28a745; font-weight: bold; }
+    .uat-status .rejected { color: #dc3545; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Handler Portal (B)</h1>
+
+    <!-- Login Form -->
+    <div id="loginForm">
+      <h2>Login</h2>
+      <form id="loginFormElement">
+        <label>Username:
+          <select name="username" id="usernameSelect" required>
+            <option value="">-- Select Username --</option>
+          </select>
+        </label>
+        <label>Password:
+          <input type="password" name="password" required placeholder="Enter password">
+        </label>
+        <button type="submit">Login</button>
+        <div id="loginMsg"></div>
+      </form>
+    </div>
+
+    <!-- Main Content (hidden until login) -->
+    <div id="mainContent">
+      <button id="logoutBtn">Logout</button>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('fetchMaterials', event)">Fetch Assigned Materials</div>
+        <div class="tab" onclick="switchTab('submitToEndUser', event)">Submit to End User</div>
+        <div class="tab" onclick="switchTab('verifyOTP', event)">OTP Verification</div>
+        <div class="tab" onclick="switchTab('uatStatus', event)">UAT Status</div>
+        <div class="tab" onclick="switchTab('changePassword', event)">Change Password</div>
+      </div>
+
+      <!-- Fetch Assigned Materials -->
+      <div id="fetchMaterials" class="tab-content active">
+        <h2>All Assigned Materials</h2>
+        <div id="fetchMsg"></div>
+        <div id="materialDetails"></div>
+      </div>
+
+      <!-- Submit to End User -->
+      <div id="submitToEndUser" class="tab-content">
+        <h2>Submit to End User</h2>
+        <form id="endUserForm">
+          <label>Identifier Type:
+            <select name="identifier_type" required>
+              <option value="">-- Select --</option>
+              <option value="po_no">PO No</option>
+              <option value="docket_no">Docket No</option>
+              <option value="invoice_no">Invoice No</option>
+              <option value="gate_pass">Gate Pass</option>
+            </select>
+          </label>
+          <label>Identifier Value:
+            <input type="text" name="identifier_value" required>
+          </label>
+          <label>Section:
+            <select name="section" id="sectionSelect" required onchange="fetchEndUsersBySection(this.value, 'endUserSelect')">
+              <option value="">-- Select Section --</option>
+              <option value="100 TPD">100 TPD</option>
+              <option value="OLD UHT">OLD UHT</option>
+              <option value="New UHT">New UHT</option>
+              <option value="20 TPD">20 TPD</option>
+              <option value="30 TPD">30 TPD</option>
+              <option value="45 TPD">45 TPD</option>
+              <option value="Ghee">Ghee</option>
+              <option value="Boiler Banas-1">Boiler Banas-1</option>
+              <option value="QA 1/ETP/NABL">QA 1/ETP/NABL</option>
+              <option value="Workshop">Workshop</option>
+              <option value="Refrigeration B-1">Refrigeration B-1</option>
+              <option value="Utility/66 KV">Utility/66 KV</option>
+              <option value="Utility/Refri-2,3,4">Utility/Refri-2,3,4</option>
+              <option value="WTP/Utility">WTP/Utility</option>
+              <option value="Systems">Systems</option>
+              <option value="Icecream">Icecream</option>
+              <option value="Reception Lab">Reception Lab</option>
+              <option value="Main Lab Banas 3">Main Lab Banas 3</option>
+              <option value="Bactoscan Lab">Bactoscan Lab</option>
+              <option value="Butter">Butter</option>
+              <option value="LMP 2 /LMP 3/ Fillpack 2">LMP 2 /LMP 3/ Fillpack 2</option>
+              <option value="Main lab Banas 2">Main lab Banas 2</option>
+              <option value="60 TPD">60 TPD</option>
+              <option value="100 TPD Lab">100 TPD Lab</option>
+              <option value="Pathogen Lab">Pathogen Lab</option>
+              <option value="Dahi">Dahi</option>
+              <option value="LMP 1/Fillpack 1">LMP 1/Fillpack 1</option>
+              <option value="Safety">Safety</option>
+              <option value="Automation">Automation</option>
+              <option value="Cheese">Cheese</option>
+              <option value="Paneer">Paneer</option>
+              <option value="Whey Lab">Whey Lab</option>
+              <option value="Micro Lab">Micro Lab</option>
+              <option value="Culture">Culture</option>
+              <option value="Cheese Lab">Cheese Lab</option>
+            </select>
+          </label>
+          <label>End User:
+            <select name="end_user" id="endUserSelect" required>
+              <option value="">-- Select End User --</option>
+            </select>
+          </label>
+          <div id="itemsContainer">
+            <div class="item-group">
+              <label>Material ID:
+                <input type="text" name="material_id[]" required>
+              </label>
+              <label>Material Description:
+                <input type="text" name="material_description[]" required>
+              </label>
+              <label>Quantity Received:
+                <input type="number" name="quantity_received[]" required min="1">
+              </label>
+            </div>
+          </div>
+          <button type="button" id="addItemBtn">+ Add Item</button>
+          <button type="submit">Submit to End User</button>
+          <div id="endUserMsg"></div>
+        </form>
+      </div>
+
+      <!-- Verify OTP from C -->
+      <div id="verifyOTP" class="tab-content">
+        <h2>Verify OTP from C</h2>
+        <form id="verifyOTPForm">
+          <label>Identifier Type:
+            <select name="identifier_type" required>
+              <option value="">-- Select --</option>
+              <option value="po_no">PO No</option>
+              <option value="docket_no">Docket No</option>
+              <option value="invoice_no">Invoice No</option>
+              <option value="gate_pass">Gate Pass</option>
+            </select>
+          </label>
+          <label>Identifier Value:
+            <input type="text" name="identifier_value" required>
+          </label>
+          <label>Section:
+            <select name="section" id="verifySectionSelect" required onchange="fetchEndUsersBySection(this.value, 'verifyEndUserSelect')">
+              <option value="">-- Select Section --</option>
+              <option value="100 TPD">100 TPD</option>
+              <option value="OLD UHT">OLD UHT</option>
+              <option value="New UHT">New UHT</option>
+              <option value="20 TPD">20 TPD</option>
+              <option value="30 TPD">30 TPD</option>
+              <option value="45 TPD">45 TPD</option>
+              <option value="Ghee">Ghee</option>
+              <option value="Boiler Banas-1">Boiler Banas-1</option>
+              <option value="QA 1/ETP/NABL">QA 1/ETP/NABL</option>
+              <option value="Workshop">Workshop</option>
+              <option value="Refrigeration B-1">Refrigeration B-1</option>
+              <option value="Utility/66 KV">Utility/66 KV</option>
+              <option value="Utility/Refri-2,3,4">Utility/Refri-2,3,4</option>
+              <option value="WTP/Utility">WTP/Utility</option>
+              <option value="Systems">Systems</option>
+              <option value="Icecream">Icecream</option>
+              <option value="Reception Lab">Reception Lab</option>
+              <option value="Main Lab Banas 3">Main Lab Banas 3</option>
+              <option value="Bactoscan Lab">Bactoscan Lab</option>
+              <option value="Butter">Butter</option>
+              <option value="LMP 2 /LMP 3/ Fillpack 2">LMP 2 /LMP 3/ Fillpack 2</option>
+              <option value="Main lab Banas 2">Main lab Banas 2</option>
+              <option value="60 TPD">60 TPD</option>
+              <option value="100 TPD Lab">100 TPD Lab</option>
+              <option value="Pathogen Lab">Pathogen Lab</option>
+              <option value="Dahi">Dahi</option>
+              <option value="LMP 1/Fillpack 1">LMP 1/Fillpack 1</option>
+              <option value="Safety">Safety</option>
+              <option value="Automation">Automation</option>
+              <option value="Cheese">Cheese</option>
+              <option value="Paneer">Paneer</option>
+              <option value="Whey Lab">Whey Lab</option>
+              <option value="Micro Lab">Micro Lab</option>
+              <option value="Culture">Culture</option>
+              <option value="Cheese Lab">Cheese Lab</option>
+            </select>
+          </label>
+          <label>End User:
+            <select name="end_user" id="verifyEndUserSelect" required>
+              <option value="">-- Select End User --</option>
+            </select>
+          </label>
+          <label>OTP from C:
+            <input type="text" name="otp2" required placeholder="Enter OTP from C">
+          </label>
+          <button type="submit">Verify OTP</button>
+          <div id="verifyOTPMsg"></div>
+        </form>
+      </div>
+
+      <!-- UAT Status -->
+      <div id="uatStatus" class="tab-content">
+        <h2>UAT Status</h2>
+        <div id="uatStatusMsg"></div>
+        <div class="uat-status">
+          <table>
+            <thead>
+              <tr>
+                <th>PO No</th>
+                <th>Invoice No</th>
+                <th>Gate Pass</th>
+                <th>Material ID</th>
+                <th>Quantity</th>
+                <th>Status</th>
+                <th>Comment</th>
+                <th>End User</th>
+                <th>Section</th>
+              </tr>
+            </thead>
+            <tbody id="uatStatusBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Change Password -->
+      <div id="changePassword" class="tab-content">
+        <h2>Change Password</h2>
+        <form id="changePasswordForm">
+          <label>Old Password:
+            <input type="password" name="old_password" required>
+          </label>
+          <label>New Password:
+            <input type="password" name="new_password" required>
+          </label>
+          <label>Confirm New Password:
+            <input type="password" name="confirm_password" required>
+          </label>
+          <button type="submit">Change Password</button>
+          <div id="changePasswordMsg"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Fetch and populate usernames in the login dropdown
+    async function fetchUsernames() {
+      try {
+        const res = await fetch('http://localhost:5000/api/admin/list-handlers', {
+          credentials: 'include'
+        });
+        if (!res.ok) {
+          let message = 'Failed to load usernames. Please try again or contact support.';
+          if (res.status === 401) {
+            message = 'Unauthorized access to handlers list. Please try again.';
+          } else if (res.status === 500) {
+            message = 'Server error while fetching usernames. Please contact support.';
+          }
+          throw new Error(message);
+        }
+        const json = await res.json();
+        const usernameSelect = document.getElementById('usernameSelect');
+        
+        usernameSelect.innerHTML = '<option value="">-- Select Username --</option>';
+
+        if (json.success && json.handlers && json.handlers.length > 0) {
+          json.handlers.forEach(handler => {
+            const option = document.createElement('option');
+            option.value = handler.username;
+            option.textContent = handler.username;
+            usernameSelect.appendChild(option);
+          });
+          document.getElementById('loginMsg').innerHTML = '';
+        } else {
+          document.getElementById('loginMsg').innerHTML = '<span class="error">No usernames available. Please contact support.</span>';
+        }
+      } catch (error) {
+        document.getElementById('loginMsg').innerHTML = `<span class="error">${error.message}</span>`;
+      }
+    }
+
+    // Fetch and populate end users by section
+    async function fetchEndUsersBySection(section, targetSelectId) {
+      if (!section) {
+        document.getElementById(targetSelectId === 'endUserSelect' ? 'endUserMsg' : 'verifyOTPMsg').innerHTML = '<span class="error">Please select a section first.</span>';
+        document.getElementById(targetSelectId).innerHTML = '<option value="">-- Select End User --</option>';
+        return;
+      }
+      try {
+        const res = await fetch(`http://localhost:5000/api/handler/list-endusers-by-section?section=${encodeURIComponent(section)}`, {
+          credentials: 'include'
+        });
+        if (!res.ok) {
+          let message = 'Failed to load end users. Please try again or contact support.';
+          if (res.status === 401) {
+            message = 'Unauthorized access to end users list. Please try again.';
+          } else if (res.status === 500) {
+            message = 'Server error while fetching end users. Please contact support.';
+          }
+          throw new Error(message);
+        }
+        const json = await res.json();
+        const endUserSelect = document.getElementById(targetSelectId);
+        
+        endUserSelect.innerHTML = '<option value="">-- Select End User --</option>';
+
+        if (json.success && json.endusers && json.endusers.length > 0) {
+          json.endusers.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.username;
+            option.textContent = user.username;
+            endUserSelect.appendChild(option);
+          });
+          document.getElementById(targetSelectId === 'endUserSelect' ? 'endUserMsg' : 'verifyOTPMsg').innerHTML = '';
+        } else {
+          document.getElementById(targetSelectId === 'endUserSelect' ? 'endUserMsg' : 'verifyOTPMsg').innerHTML = '<span class="error">No end users available for this section.</span>';
+        }
+      } catch (error) {
+        document.getElementById(targetSelectId === 'endUserSelect' ? 'endUserMsg' : 'verifyOTPMsg').innerHTML = `<span class="error">${error.message}</span>`;
+      }
+    }
+
+    // Add item fields dynamically
+    document.getElementById('addItemBtn').addEventListener('click', () => {
+      const itemsContainer = document.getElementById('itemsContainer');
+      const itemGroup = document.createElement('div');
+      itemGroup.className = 'item-group';
+      itemGroup.innerHTML = `
+        <label>Material ID:
+          <input type="text" name="material_id[]" required>
+        </label>
+        <label>Material Description:
+          <input type="text" name="material_description[]" required>
+        </label>
+        <label>Quantity Received:
+          <input type="number" name="quantity_received[]" required min="1">
+        </label>
+        <button type="button" class="remove-item">Remove</button>
+      `;
+      itemsContainer.appendChild(itemGroup);
+      itemGroup.querySelector('.remove-item').addEventListener('click', () => {
+        if (itemsContainer.children.length > 1) {
+          itemsContainer.removeChild(itemGroup);
+        }
+      });
+    });
+
+    // Prevent removing the first item group
+    document.addEventListener('DOMContentLoaded', () => {
+      const firstRemoveBtn = document.querySelector('.item-group .remove-item');
+      if (firstRemoveBtn) firstRemoveBtn.style.display = 'none';
+      fetchUsernames();
+    });
+
+    function switchTab(tabId, evt) {
+      document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      if (evt && evt.target) evt.target.classList.add('active');
+      if (tabId === 'fetchMaterials') autoFetchMaterials(localStorage.getItem('username'));
+      if (tabId === 'uatStatus') fetchUATStatus(localStorage.getItem('username'));
+      if (tabId === 'submitToEndUser') {
+        document.getElementById('sectionSelect').value = '';
+        document.getElementById('endUserSelect').innerHTML = '<option value="">-- Select End User --</option>';
+      }
+      if (tabId === 'verifyOTP') {
+        document.getElementById('verifySectionSelect').value = '';
+        document.getElementById('verifyEndUserSelect').innerHTML = '<option value="">-- Select End User --</option>';
+      }
+    }
+
+    // Check if logged in on load
+    async function checkLogin() {
+      try {
+        const res = await fetch('http://localhost:5000/api/handler/check-session', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned invalid JSON: ${text}`);
+        }
+        if (json.success && json.username) {
+          localStorage.setItem('username', json.username);
+          document.getElementById('loginForm').style.display = 'none';
+          document.getElementById('mainContent').style.display = 'block';
+          autoFetchMaterials(json.username);
+        } else {
+          localStorage.removeItem('username');
+          document.getElementById('loginForm').style.display = 'block';
+          document.getElementById('mainContent').style.display = 'none';
+          document.getElementById('loginMsg').innerHTML = '<span class="error">Please log in with a valid handler account</span>';
+        }
+      } catch (error) {
+        localStorage.removeItem('username');
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('loginMsg').innerHTML = `<span class="error">Session error: ${error.message}. Please log in again.</span>`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', checkLogin);
+
+    // Login with retry mechanism
+    async function attemptLogin(formData, retries = 3, delay = 1000) {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          const res = await fetch('http://localhost:5000/api/handler/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+            credentials: 'include'
+          });
+          const text = await res.text();
+          let json;
+          try {
+            json = JSON.parse(text);
+          } catch (parseError) {
+            throw new Error(`Server returned invalid JSON: ${text}`);
+          }
+          const msgDiv = document.getElementById('loginMsg');
+          if (json.success) {
+            localStorage.setItem('username', json.username);
+            msgDiv.innerHTML = '<span class="success">Login successful</span>';
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            autoFetchMaterials(json.username);
+            return;
+          } else {
+            localStorage.removeItem('username');
+            msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+            if (json.message.includes('Session not initialized') && attempt < retries) {
+              await new Promise(resolve => setTimeout(resolve, delay));
+              continue;
+            }
+            return;
+          }
+        } catch (error) {
+          localStorage.removeItem('username');
+          const msgDiv = document.getElementById('loginMsg');
+          const errorMessage = error.message.includes('Cannot set properties of undefined') 
+            ? 'Server error: Session initialization failed. Please try again or contact support.' 
+            : `Server error: Unable to login - ${error.message}`;
+          msgDiv.innerHTML = `<span class="error">${errorMessage}</span>`;
+          if (error.message.includes('Session not initialized') && attempt < retries) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+          return;
+        }
+      }
+    }
+
+    // Login
+    document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      await attemptLogin(formData);
+    });
+
+    // Fetch UAT Status
+    async function fetchUATStatus(username) {
+      if (!username) {
+        document.getElementById('uatStatusMsg').innerHTML = '<span class="error">Please log in to view UAT status</span>';
+        return;
+      }
+      try {
+        const res = await fetch('http://localhost:5000/api/handler/uat-status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ handler: username }),
+          credentials: 'include'
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned invalid JSON: ${text}`);
+        }
+        const msgDiv = document.getElementById('uatStatusMsg');
+        const tableBody = document.getElementById('uatStatusBody');
+        if (json.success) {
+          if (json.items.length > 0) {
+            msgDiv.innerHTML = '<span class="success">UAT status fetched successfully</span>';
+            let html = '';
+            json.items.forEach(item => {
+              const statusClass = item.acceptance_status === 'accepted' ? 'accepted' : 'rejected';
+              html += `
+                <tr>
+                  <td>${item.po_no || 'N/A'}</td>
+                  <td>${item.invoice_no || 'N/A'}</td>
+                  <td>${item.gate_pass || 'N/A'}</td>
+                  <td>${item.material_id}</td>
+                  <td>${item.quantity_received}</td>
+                  <td class="${statusClass}">${item.acceptance_status}</td>
+                  <td>${item.approval_comment || 'N/A'}</td>
+                  <td>${item.end_user}</td>
+                  <td>${item.section}</td>
+                </tr>
+              `;
+            });
+            tableBody.innerHTML = html;
+          } else {
+            msgDiv.innerHTML = '';
+            tableBody.innerHTML = '<tr><td colspan="9">No items have been accepted or rejected yet.</td></tr>';
+          }
+        } else {
+          msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+          tableBody.innerHTML = '<tr><td colspan="9">No items found.</td></tr>';
+        }
+      } catch (error) {
+        document.getElementById('uatStatusMsg').innerHTML = `<span class="error">Server error: Unable to fetch UAT status - ${error.message}</span>`;
+        document.getElementById('uatStatusBody').innerHTML = '<tr><td colspan="9">Error loading UAT status.</td></tr>';
+      }
+    }
+
+    // Auto-fetch all materials for logged-in handler
+    async function autoFetchMaterials(username) {
+      if (!username) {
+        document.getElementById('fetchMsg').innerHTML = '<span class="error">Please log in to fetch materials</span>';
+        return;
+      }
+      try {
+        const res = await fetch('http://localhost:5000/api/handler/fetch-materials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ handler: username }),
+          credentials: 'include'
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned invalid JSON: ${text}`);
+        }
+        const msgDiv = document.getElementById('fetchMsg');
+        const detailsDiv = document.getElementById('materialDetails');
+        if (json.success) {
+          msgDiv.innerHTML = '<span class="success">All assigned materials fetched successfully</span>';
+          let html = '';
+          json.materials.forEach(mat => {
+            const timestampStr = mat.timestamp_a ? new Date(mat.timestamp_a).toLocaleString('en-GB', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            }) : 'N/A';
+            const itemsStr = mat.items && mat.items.length > 0 
+              ? mat.items.map(item => `Material ID: ${item.material_id}, Description: ${item.material_description}, Quantity: ${item.quantity_received}`).join('; ')
+              : 'No items';
+            html += `
+              <div class="material-details">
+                <p><strong>PO No:</strong> ${mat.po_no || 'N/A'}</p>
+                <p><strong>Invoice No:</strong> ${mat.invoice_no || 'N/A'}</p>
+                <p><strong>Docket No:</strong> ${mat.docket_no || 'N/A'}</p>
+                <p><strong>Gate Pass:</strong> ${mat.gate_pass || 'N/A'}</p>
+                <p><strong>Vendor:</strong> ${mat.vendor || 'N/A'}</p>
+                <p><strong>Section:</strong> ${mat.section || 'N/A'}</p>
+                <p><strong>Handler:</strong> ${mat.handler || 'N/A'}</p>
+                <p><strong>OTP:</strong> <span class="otp-highlight">${mat.otp1 || 'N/A'}</span></p>
+                <p><strong>Status:</strong> ${mat.status || 'N/A'}</p>
+                <p><strong>Timestamp:</strong> ${timestampStr}</p>
+                <p><strong>Items:</strong> ${itemsStr}</p>
+              </div>
+            `;
+          });
+          detailsDiv.innerHTML = html;
+        } else {
+          msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+          detailsDiv.innerHTML = '';
+        }
+      } catch (error) {
+        document.getElementById('fetchMsg').innerHTML = `<span class="error">Server error: Unable to fetch materials - ${error.message}</span>`;
+        document.getElementById('materialDetails').innerHTML = '';
+      }
+    }
+
+    // Submit to End User
+    document.getElementById('endUserForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const data = { handler: localStorage.getItem('username') };
+      const items = [];
+      
+      if (!data.handler) {
+        document.getElementById('endUserMsg').innerHTML = '<span class="error">Please log in again</span>';
+        return;
+      }
+
+      // Collect single fields
+      data.identifier_type = formData.get('identifier_type');
+      data.identifier_value = formData.get('identifier_value');
+      data.section = formData.get('section');
+      data.end_user = formData.get('end_user');
+
+      // Collect item fields
+      const materialIds = formData.getAll('material_id[]');
+      const descriptions = formData.getAll('material_description[]');
+      const quantities = formData.getAll('quantity_received[]');
+      
+      for (let i = 0; i < materialIds.length; i++) {
+        items.push({
+          material_id: materialIds[i],
+          material_description: descriptions[i],
+          quantity_received: parseInt(quantities[i])
+        });
+      }
+      data.items = items;
+
+      try {
+        const res = await fetch('http://localhost:5000/api/handler/submit-to-enduser', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+          credentials: 'include'
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned invalid JSON: ${text}`);
+        }
+        document.getElementById('endUserMsg').innerHTML =
+          json.success ? `<span class="success">Materials submitted successfully to End User ${data.end_user}</span>` :
+                         `<span class="error">${json.message}</span>`;
+        if (json.success) {
+          form.reset();
+          document.getElementById('sectionSelect').value = '';
+          document.getElementById('endUserSelect').innerHTML = '<option value="">-- Select End User --</option>';
+          document.getElementById('itemsContainer').innerHTML = `
+            <div class="item-group">
+              <label>Material ID:
+                <input type="text" name="material_id[]" required>
+              </label>
+              <label>Material Description:
+                <input type="text" name="material_description[]" required>
+              </label>
+              <label>Quantity Received:
+                <input type="number" name="quantity_received[]" required min="1">
+              </label>
+            </div>
+          `;
+          autoFetchMaterials(data.handler);
+        }
+      } catch (error) {
+        document.getElementById('endUserMsg').innerHTML = `<span class="error">Server error: Unable to submit to end user - ${error.message}</span>`;
+      }
+    });
+
+    // Verify OTP from C
+    document.getElementById('verifyOTPForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      formData.handler = localStorage.getItem('username');
+      if (!formData.handler) {
+        document.getElementById('verifyOTPMsg').innerHTML = '<span class="error">Please log in again</span>';
+        return;
+      }
+      try {
+        const res = await fetch('http://localhost:5000/api/handler/verify-otp2', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+          credentials: 'include'
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned invalid JSON: ${text}`);
+        }
+        document.getElementById('verifyOTPMsg').innerHTML =
+          json.success ? `<span class="success">${json.message}</span>` :
+                         `<span class="error">${json.message}</span>`;
+        if (json.success) {
+          document.getElementById('verifyOTPForm').reset();
+          document.getElementById('verifySectionSelect').value = '';
+          document.getElementById('verifyEndUserSelect').innerHTML = '<option value="">-- Select End User --</option>';
+          autoFetchMaterials(formData.handler);
+        }
+      } catch (error) {
+        document.getElementById('verifyOTPMsg').innerHTML = `<span class="error">Server error: Unable to verify OTP - ${error.message}</span>`;
+      }
+    });
+
+    // Change Password
+    document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      formData.username = localStorage.getItem('username');
+      if (!formData.username) {
+        document.getElementById('changePasswordMsg').innerHTML = '<span class="error">Please log in again</span>';
+        return;
+      }
+      if (formData.new_password !== formData.confirm_password) {
+        document.getElementById('changePasswordMsg').innerHTML = '<span class="error">New password and confirm password do not match</span>';
+        return;
+      }
+      try {
+        const res = await fetch('http://localhost:5000/api/handler/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+          credentials: 'include'
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned invalid JSON: ${text}`);
+        }
+        document.getElementById('changePasswordMsg').innerHTML =
+          json.success ? `<span class="success">${json.message}</span>` :
+                         `<span class="error">${json.message}</span>`;
+        if (json.success) {
+          document.getElementById('changePasswordForm').reset();
+        }
+      } catch (error) {
+        document.getElementById('changePasswordMsg').innerHTML = `<span class="error">Server error: Unable to change password - ${error.message}</span>`;
+      }
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/handler/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned invalid JSON: ${text}`);
+        }
+        if (json.success) {
+          localStorage.removeItem('username');
+          document.getElementById('mainContent').style.display = 'none';
+          document.getElementById('loginForm').style.display = 'block';
+          document.getElementById('materialDetails').innerHTML = '';
+          document.getElementById('loginMsg').innerHTML = '<span class="success">Logged out successfully</span>';
+          fetchUsernames();
+        } else {
+          document.getElementById('loginMsg').innerHTML = `<span class="error">${json.message}</span>`;
+        }
+      } catch (error) {
+        document.getElementById('loginMsg').innerHTML = `<span class="error">Server error: Unable to logout - ${error.message}</span>`;
+      }
+    });
+  </script>
+</body>
+</html>

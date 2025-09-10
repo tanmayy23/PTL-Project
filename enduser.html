@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>End User Portal (C)</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; padding: 20px; }
+    .container { 
+      max-width: 1000px; 
+      margin: auto; 
+      background: #fff; 
+      padding: 25px 30px; 
+      border-radius: 8px; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08); 
+      position: relative;
+    }
+    h1, h2 { color: #2c3e50; }
+    select, input, button, textarea { width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+    button { background-color: #3498db; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #2980b9; }
+    .tabs { display: flex; margin-bottom: 20px; }
+    .tab { padding: 10px 20px; cursor: pointer; background-color: #e0e0e0; margin-right: 10px; border-radius: 5px 5px 0 0; }
+    .tab.active { background-color: #3498db; color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .success { color: green; font-weight: bold; margin-top: 10px; }
+    .error { color: red; font-weight: bold; margin-top: 10px; }
+    label { display: block; margin-top: 10px; font-weight: 500; }
+    .material-details { margin-top: 20px; padding: 15px; border: 1px solid #eee; border-radius: 4px; }
+    .material-details p { margin: 5px 0; }
+    .otp-highlight { 
+      font-size: 18px; 
+      font-weight: bold; 
+      background-color: #ffff99; 
+      color: #000000; 
+      padding: 5px; 
+      border: 1px solid #ccc; 
+      display: inline-block; 
+    }
+    .section { margin-top: 20px; padding-top: 12px; border-top: 1px solid #eee; }
+    .pending-materials { margin-top: 20px; }
+    .pending-materials table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .pending-materials th, .pending-materials td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    .pending-materials th { background-color: #f2f2f2; }
+    .reminder { color: #d32f2f; font-weight: bold; margin-bottom: 10px; }
+    #logoutBtn { 
+      background-color: #e74c3c; 
+      padding: 8px 16px;
+      font-size: 14px;
+      position: absolute;
+      top: 10px; 
+      right: 10px; 
+      width: auto;
+    }
+    #logoutBtn:hover { background-color: #c0392b; }
+    #login { display: block; }
+    #mainContent { display: none; }
+    .action-button { width: auto; margin: 0 5px; }
+    .action-button.accept { background-color: #28a745; }
+    .action-button.accept:hover { background-color: #218838; }
+    .action-button.reject { background-color: #dc3545; }
+    .action-button.reject:hover { background-color: #c82333; }
+    .modal { 
+      display: none; 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background-color: rgba(0,0,0,0.5); 
+      z-index: 1000; 
+    }
+    .modal-content { 
+      background-color: #fff; 
+      margin: 15% auto; 
+      padding: 20px; 
+      border-radius: 5px; 
+      width: 80%; 
+      max-width: 500px; 
+      text-align: center; 
+    }
+    .modal-content button { 
+      margin: 10px; 
+      padding: 10px 20px; 
+    }
+    .modal-content textarea { 
+      width: 100%; 
+      margin-top: 10px; 
+      padding: 10px; 
+      border: 1px solid #ccc; 
+      border-radius: 4px; 
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>End User Portal</h1>
+
+    <!-- Login Section -->
+    <div id="login" class="tab-content active">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <label>Section:
+          <select name="section" id="sectionSelect" required onchange="fetchEndUsersBySection(this.value)">
+            <option value="">-- Select Section --</option>
+            <option value="100 TPD">100 TPD</option>
+            <option value="OLD UHT">OLD UHT</option>
+            <option value="New UHT">New UHT</option>
+            <option value="20 TPD">20 TPD</option>
+            <option value="30 TPD">30 TPD</option>
+            <option value="45 TPD">45 TPD</option>
+            <option value="Ghee">Ghee</option>
+            <option value="Boiler Banas-1">Boiler Banas-1</option>
+            <option value="QA 1/ETP/NABL">QA 1/ETP/NABL</option>
+            <option value="Workshop">Workshop</option>
+            <option value="Refrigeration B-1">Refrigeration B-1</option>
+            <option value="Utility/66 KV">Utility/66 KV</option>
+            <option value="Utility/Refri-2,3,4">Utility/Refri-2,3,4</option>
+            <option value="WTP/Utility">WTP/Utility</option>
+            <option value="Systems">Systems</option>
+            <option value="Icecream">Icecream</option>
+            <option value="Reception Lab">Reception Lab</option>
+            <option value="Main Lab Banas 3">Main Lab Banas 3</option>
+            <option value="Bactoscan Lab">Bactoscan Lab</option>
+            <option value="Butter">Butter</option>
+            <option value="LMP 2 /LMP 3/ Fillpack 2">LMP 2 /LMP 3/ Fillpack 2</option>
+            <option value="Main lab Banas 2">Main lab Banas 2</option>
+            <option value="60 TPD">60 TPD</option>
+            <option value="100 TPD Lab">100 TPD Lab</option>
+            <option value="Pathogen Lab">Pathogen Lab</option>
+            <option value="Dahi">Dahi</option>
+            <option value="LMP 1/Fillpack 1">LMP 1/Fillpack 1</option>
+            <option value="Safety">Safety</option>
+            <option value="Automation">Automation</option>
+            <option value="Cheese">Cheese</option>
+            <option value="Paneer">Paneer</option>
+            <option value="Whey Lab">Whey Lab</option>
+            <option value="Micro Lab">Micro Lab</option>
+            <option value="Culture">Culture</option>
+            <option value="Cheese Lab">Cheese Lab</option>
+          </select>
+        </label>
+        <label>Username:
+          <select name="username" id="usernameSelect" required>
+            <option value="">-- Select Username --</option>
+          </select>
+        </label>
+        <label>Password:
+          <input type="password" name="password" required placeholder="Enter password">
+        </label>
+        <button type="submit">Login</button>
+        <div id="loginMsg"></div>
+      </form>
+    </div>
+
+    <!-- Main Content (Hidden until logged in) -->
+    <div id="mainContent">
+      <button id="logoutBtn">Logout</button>
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('updateStatus', event)">View Materials</div>
+        <div class="tab" onclick="switchTab('approval', event)">Approve/Reject</div>
+        <div class="tab" onclick="switchTab('changePassword', event)">Change Password</div>
+      </div>
+
+      <!-- View Materials -->
+      <div id="updateStatus" class="tab-content active">
+        <h2>View Materials</h2>
+        <div id="fetchMsg"></div>
+        <div id="materialDetails"></div>
+      </div>
+
+      <!-- Approval -->
+      <div id="approval" class="tab-content">
+        <h2>Approve/Reject</h2>
+        <div class="reminder" id="reminderMsg"></div>
+        <div class="pending-materials">
+          <h3>Pending Materials</h3>
+          <table id="pendingMaterialsTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>PO No</th>
+                <th>Docket No</th>
+                <th>Invoice No</th>
+                <th>Gate Pass</th>
+                <th>Timestamp</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="pendingMaterialsBody"></tbody>
+          </table>
+        </div>
+        <div class="section">
+          <h3>Materials by Identifier</h3>
+          <label>Identifier Type:
+            <select id="identifierTypeSelect">
+              <option value="">-- Select Identifier Type --</option>
+              <option value="po_no">PO No</option>
+              <option value="docket_no">Docket No</option>
+              <option value="invoice_no">Invoice No</option>
+              <option value="gate_pass">Gate Pass</option>
+            </select>
+          </label>
+          <label>Identifier Value:
+            <input type="text" id="identifierValueInput" placeholder="Enter identifier value">
+          </label>
+          <button onclick="fetchMaterialsByIdentifier()">Fetch Materials</button>
+          <div id="materialsByIdentifierMsg"></div>
+          <table id="materialsByIdentifierTable">
+            <thead>
+              <tr>
+                <th>Material ID</th>
+                <th>Material Description</th>
+                <th>Quantity</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="materialsByIdentifierBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Change Password -->
+      <div id="changePassword" class="tab-content">
+        <h2>Change Password</h2>
+        <form id="changePasswordForm">
+          <label>Old Password:
+            <input type="password" name="old_password" required>
+          </label>
+          <label>New Password:
+            <input type="password" name="new_password" required>
+          </label>
+          <label>Re-enter New Password:
+            <input type="password" name="confirm_password" required>
+          </label>
+          <button type="submit">Change Password</button>
+          <div id="changePasswordMsg"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal">
+      <div class="modal-content">
+        <h3 id="modalTitle"></h3>
+        <p id="modalMessage"></p>
+        <div id="modalCommentSection" style="display: none;">
+          <label>Reason for Rejection:
+            <textarea id="modalCommentInput" placeholder="Enter reason for rejection" required></textarea>
+          </label>
+        </div>
+        <button id="modalConfirmBtn">Confirm</button>
+        <button id="modalCancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let loggedInUser = null;
+    let selectedMaterialId = null;
+    let selectedAction = null;
+    let selectedIdentifierType = null;
+    let selectedIdentifierValue = null;
+
+    // Fetch and populate end users by section
+    async function fetchEndUsersBySection(section) {
+      if (!section) {
+        document.getElementById('usernameSelect').innerHTML = '<option value="">-- Select Username --</option>';
+        document.getElementById('loginMsg').innerHTML = '<span class="error">Please select a section first.</span>';
+        return;
+      }
+      try {
+        const res = await fetch(`http://localhost:5000/api/handler/list-endusers-by-section?section=${encodeURIComponent(section)}`, {
+          credentials: 'include'
+        });
+        if (!res.ok) {
+          let message = 'Failed to load end users. Please try again or contact support.';
+          if (res.status === 401) {
+            message = 'Unauthorized access to end users list. Please try again.';
+          } else if (res.status === 500) {
+            message = 'Server error while fetching end users. Please contact support.';
+          }
+          throw new Error(message);
+        }
+        const json = await res.json();
+        const usernameSelect = document.getElementById('usernameSelect');
+        
+        usernameSelect.innerHTML = '<option value="">-- Select Username --</option>';
+
+        if (json.success && json.endusers && json.endusers.length > 0) {
+          json.endusers.forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.username;
+            option.textContent = user.username;
+            usernameSelect.appendChild(option);
+          });
+          document.getElementById('loginMsg').innerHTML = '';
+        } else {
+          document.getElementById('loginMsg').innerHTML = '<span class="error">No end users available for this section.</span>';
+        }
+      } catch (error) {
+        console.error(`Error fetching end users: ${error.message}`);
+        document.getElementById('loginMsg').innerHTML = `<span class="error">${error.message}</span>`;
+      }
+    }
+
+    function switchTab(tabId, evt) {
+      document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      if (evt && evt.target) evt.target.classList.add('active');
+      if (tabId === 'approval') {
+        fetchPendingMaterials();
+        document.getElementById('identifierTypeSelect').value = '';
+        document.getElementById('identifierValueInput').value = '';
+        document.getElementById('materialsByIdentifierBody').innerHTML = '';
+        document.getElementById('materialsByIdentifierMsg').innerHTML = '';
+      }
+      if (tabId === 'updateStatus') fetchMaterials();
+    }
+
+    // Check if logged in on load
+    async function checkLogin() {
+      try {
+        const res = await fetch('http://localhost:5000/api/enduser/check-session', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned invalid JSON: ${text}`);
+        }
+        if (json.success && json.username) {
+          loggedInUser = json.username;
+          document.getElementById('login').style.display = 'none';
+          document.getElementById('mainContent').style.display = 'block';
+          switchTab('updateStatus');
+          fetchMaterials();
+        } else {
+          loggedInUser = null;
+          document.getElementById('login').style.display = 'block';
+          document.getElementById('mainContent').style.display = 'none';
+          document.getElementById('loginMsg').innerHTML = '<span class="error">Please log in with a valid end user account</span>';
+        }
+      } catch (error) {
+        loggedInUser = null;
+        document.getElementById('login').style.display = 'block';
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('loginMsg').innerHTML = `<span class="error">Session error: ${error.message}. Please log in again.</span>`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', checkLogin);
+
+    // Login with retry mechanism
+    async function attemptLogin(formData, retries = 3, delay = 1000) {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+          const res = await fetch('http://localhost:5000/api/enduser/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+            credentials: 'include'
+          });
+          const text = await res.text();
+          let json;
+          try {
+            json = JSON.parse(text);
+          } catch (parseError) {
+            throw new Error(`Server returned invalid JSON: ${text}`);
+          }
+          const msgDiv = document.getElementById('loginMsg');
+          if (json.success) {
+            loggedInUser = json.username;
+            document.getElementById('login').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            msgDiv.innerHTML = '<span class="success">Login successful</span>';
+            switchTab('updateStatus');
+            fetchMaterials();
+            return;
+          } else {
+            msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+            if (json.message.includes('Session not initialized') && attempt < retries) {
+              await new Promise(resolve => setTimeout(resolve, delay));
+              continue;
+            }
+            return;
+          }
+        } catch (error) {
+          const msgDiv = document.getElementById('loginMsg');
+          const errorMessage = error.message.includes('relation "enduser_sessions" does not exist') 
+            ? 'Server error: Session initialization failed. Please try again or contact support.' 
+            : `Server error: Unable to login - ${error.message}`;
+          msgDiv.innerHTML = `<span class="error">${errorMessage}</span>`;
+          if (errorMessage.includes('Session initialization failed') && attempt < retries) {
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+          return;
+        }
+      }
+    }
+
+    // Login Form
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      await attemptLogin(formData);
+    });
+
+    // Fetch Materials
+    async function fetchMaterials() {
+      if (!loggedInUser) {
+        document.getElementById('fetchMsg').innerHTML = '<span class="error">Please log in to view materials</span>';
+        return;
+      }
+      try {
+        const res = await fetch('http://localhost:5000/api/enduser/fetch-materials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ end_user: loggedInUser }),
+          credentials: 'include'
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned invalid JSON: ${text}`);
+        }
+        const msgDiv = document.getElementById('fetchMsg');
+        const detailsDiv = document.getElementById('materialDetails');
+        if (json.success) {
+          msgDiv.innerHTML = '<span class="success">Materials fetched successfully</span>';
+          let html = '';
+          json.materials.forEach(mat => {
+            const dateStr = mat.date ? new Date(mat.date).toLocaleString('en-GB', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            }) : 'N/A';
+            const timestampStr = mat.timestamp_c ? new Date(mat.timestamp_c).toLocaleString('en-GB', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            }) : 'N/A';
+            const itemsStr = mat.items && mat.items.length > 0 
+              ? mat.items.map(item => `Material ID: ${item.material_id}, Description: ${item.material_description}, Quantity: ${item.quantity_received}`).join('; ')
+              : 'No items';
+            html += `
+              <div class="material-details">
+                <p><strong>Date:</strong> ${dateStr}</p>
+                <p><strong>PO No:</strong> ${mat.po_no || 'N/A'}</p>
+                <p><strong>Invoice No:</strong> ${mat.invoice_no || 'N/A'}</p>
+                <p><strong>Docket No:</strong> ${mat.docket_no || 'N/A'}</p>
+                <p><strong>Gate Pass:</strong> ${mat.gate_pass || 'N/A'}</p>
+                <p><strong>OTP for End User:</strong> <span class="otp-highlight">${mat.otp2 || 'N/A'}</span></p>
+                <p><strong>Vendor:</strong> ${mat.vendor || 'N/A'}</p>
+                <p><strong>Section:</strong> ${mat.section || 'N/A'}</p>
+                <p><strong>Handler:</strong> ${mat.handler || 'N/A'}</p>
+                <p><strong>Number of Parcels:</strong> ${mat.parcel_count || 'N/A'}</p>
+                <p><strong>Status:</strong> ${mat.status || 'N/A'}</p>
+                <p><strong>End User:</strong> ${mat.end_user || 'N/A'}</p>
+                <p><strong>Timestamp:</strong> ${timestampStr}</p>
+                <p><strong>Items:</strong> ${itemsStr}</p>
+              </div>
+            `;
+          });
+          detailsDiv.innerHTML = html;
+        } else {
+          msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+          detailsDiv.innerHTML = '';
+        }
+      } catch (error) {
+        document.getElementById('fetchMsg').innerHTML = `<span class="error">Server error: Unable to fetch materials - ${error.message}</span>`;
+        document.getElementById('materialDetails').innerHTML = '';
+      }
+    }
+
+    // Fetch Pending Materials for Approval
+    async function fetchPendingMaterials() {
+      if (!loggedInUser) {
+        document.getElementById('reminderMsg').innerHTML = '<span class="error">Please log in to view pending materials</span>';
+        return;
+      }
+      try {
+        const res = await fetch('http://localhost:5000/api/enduser/pending-materials', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ end_user: loggedInUser }),
+          credentials: 'include'
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned invalid JSON: ${text}`);
+        }
+        const tableBody = document.getElementById('pendingMaterialsBody');
+        const reminderMsg = document.getElementById('reminderMsg');
+        if (json.success && json.materials.length > 0) {
+          reminderMsg.innerHTML = `Reminder: You have ${json.materials.length} material(s) pending approval/rejection.`;
+          let html = '';
+          json.materials.forEach(mat => {
+            const timestampStr = mat.timestamp_c ? new Date(mat.timestamp_c).toLocaleString('en-GB', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            }) : 'N/A';
+            html += `
+              <tr>
+                <td>${mat.id}</td>
+                <td>${mat.po_no || 'N/A'}</td>
+                <td>${mat.docket_no || 'N/A'}</td>
+                <td>${mat.invoice_no || 'N/A'}</td>
+                <td>${mat.gate_pass || 'N/A'}</td>
+                <td>${timestampStr}</td>
+                <td>
+                  <button onclick="selectPendingMaterial('${mat.identifier}', '${mat.identifier_type}')">Select</button>
+                </td>
+              </tr>
+            `;
+          });
+          tableBody.innerHTML = html;
+        } else {
+          reminderMsg.innerHTML = json.success ? '' : `<span class="error">${json.message}</span>`;
+          tableBody.innerHTML = '<tr><td colspan="7">No pending materials found.</td></tr>';
+        }
+      } catch (error) {
+        document.getElementById('reminderMsg').innerHTML = `<span class="error">Server error: Unable to fetch pending materials - ${error.message}</span>`;
+        document.getElementById('pendingMaterialsBody').innerHTML = '<tr><td colspan="7">Error loading pending materials.</td></tr>';
+      }
+    }
+
+    // Select Pending Material and Auto-fill
+    function selectPendingMaterial(identifier, identifier_type) {
+      document.getElementById('identifierTypeSelect').value = identifier_type;
+      document.getElementById('identifierValueInput').value = identifier;
+      fetchMaterialsByIdentifier();
+    }
+
+    // Fetch Materials by Identifier
+    async function fetchMaterialsByIdentifier() {
+      if (!loggedInUser) {
+        document.getElementById('materialsByIdentifierMsg').innerHTML = '<span class="error">Please log in to view materials</span>';
+        return;
+      }
+      const identifierType = document.getElementById('identifierTypeSelect').value;
+      const identifierValue = document.getElementById('identifierValueInput').value.trim();
+      if (!identifierType || !identifierValue) {
+        document.getElementById('materialsByIdentifierMsg').innerHTML = '<span class="error">Please select an identifier type and enter a value</span>';
+        document.getElementById('materialsByIdentifierBody').innerHTML = '';
+        return;
+      }
+      console.log(`Fetching materials for identifier_type: ${identifierType}, identifier_value: ${identifierValue}`);
+      try {
+        const res = await fetch('http://localhost:5000/api/enduser/pending-materials-by-identifier', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ end_user: loggedInUser, identifier_type: identifierType, identifier_value: identifierValue }),
+          credentials: 'include'
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned invalid JSON: ${text}`);
+        }
+        console.log(`Response from /pending-materials-by-identifier: ${JSON.stringify(json)}`);
+        const msgDiv = document.getElementById('materialsByIdentifierMsg');
+        const tableBody = document.getElementById('materialsByIdentifierBody');
+        if (json.success && json.materials.length > 0) {
+          msgDiv.innerHTML = '<span class="success">Materials fetched successfully</span>';
+          let html = '';
+          json.materials.forEach(mat => {
+            const timestampStr = mat.timestamp_c ? new Date(mat.timestamp_c).toLocaleString('en-GB', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit'
+            }) : 'N/A';
+            html += `
+              <tr>
+                <td>${mat.material_id}</td>
+                <td>${mat.material_description}</td>
+                <td>${mat.quantity_received}</td>
+                <td>
+                  <button class="action-button accept" onclick="showConfirmationModal('${mat.material_id}', 'approve', '${mat.identifier_type}', '${mat.identifier_value}')">Accept</button>
+                  <button class="action-button reject" onclick="showConfirmationModal('${mat.material_id}', 'reject', '${mat.identifier_type}', '${mat.identifier_value}')">Reject</button>
+                </td>
+              </tr>
+            `;
+          });
+          tableBody.innerHTML = html;
+        } else {
+          msgDiv.innerHTML = `<span class="error">${json.message || 'No pending materials found for this identifier'}</span>`;
+          tableBody.innerHTML = '<tr><td colspan="4">No materials found.</td></tr>';
+        }
+      } catch (error) {
+        console.error(`Error fetching materials: ${error.message}`);
+        document.getElementById('materialsByIdentifierMsg').innerHTML = `<span class="error">Server error: Unable to fetch materials - ${error.message}</span>`;
+        document.getElementById('materialsByIdentifierBody').innerHTML = '<tr><td colspan="4">Error loading materials.</td></tr>';
+      }
+    }
+
+    // Show Confirmation Modal
+    function showConfirmationModal(materialId, action, identifierType, identifierValue) {
+      selectedMaterialId = materialId;
+      selectedAction = action;
+      selectedIdentifierType = identifierType;
+      selectedIdentifierValue = identifierValue;
+
+      const modal = document.getElementById('confirmationModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalMessage = document.getElementById('modalMessage');
+      const modalCommentSection = document.getElementById('modalCommentSection');
+      const modalCommentInput = document.getElementById('modalCommentInput');
+
+      if (action === 'approve') {
+        modalTitle.textContent = 'Confirm Approval';
+        modalMessage.textContent = `Are you sure you want to approve material ID ${materialId}?`;
+        modalCommentSection.style.display = 'none';
+        modalCommentInput.value = '';
+      } else {
+        modalTitle.textContent = 'Reject Material';
+        modalMessage.textContent = `Please provide a reason for rejecting material ID ${materialId}:`;
+        modalCommentSection.style.display = 'block';
+        modalCommentInput.value = '';
+        modalCommentInput.focus();
+      }
+
+      modal.style.display = 'block';
+    }
+
+    // Close Modal
+    function closeModal() {
+      document.getElementById('confirmationModal').style.display = 'none';
+      selectedMaterialId = null;
+      selectedAction = null;
+      selectedIdentifierType = null;
+      selectedIdentifierValue = null;
+      document.getElementById('modalCommentInput').value = '';
+    }
+
+    // Submit Material Action
+    async function submitMaterialAction() {
+      if (!loggedInUser || !selectedMaterialId || !selectedAction || !selectedIdentifierType || !selectedIdentifierValue) {
+        document.getElementById('materialsByIdentifierMsg').innerHTML = '<span class="error">Please select a material and action</span>';
+        closeModal();
+        return;
+      }
+      const comment = selectedAction === 'reject' ? document.getElementById('modalCommentInput').value.trim() : '';
+      if (selectedAction === 'reject' && !comment) {
+        document.getElementById('materialsByIdentifierMsg').innerHTML = '<span class="error">Comment is required for rejection</span>';
+        return;
+      }
+      try {
+        const res = await fetch('http://localhost:5000/api/enduser/approve-material', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            end_user: loggedInUser,
+            material_id: selectedMaterialId,
+            identifier_type: selectedIdentifierType,
+            identifier_value: selectedIdentifierValue,
+            action: selectedAction,
+            comment
+          }),
+          credentials: 'include'
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned invalid JSON: ${text}`);
+        }
+        const msgDiv = document.getElementById('materialsByIdentifierMsg');
+        if (json.success) {
+          msgDiv.innerHTML = `<span class="success">${json.message}</span>`;
+          closeModal();
+          await fetchMaterialsByIdentifier(); // Refresh Materials by Identifier table
+          await fetchPendingMaterials(); // Refresh Pending Materials table
+        } else {
+          msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+          closeModal();
+        }
+      } catch (error) {
+        document.getElementById('materialsByIdentifierMsg').innerHTML = `<span class="error">Server error: Unable to process action - ${error.message}</span>`;
+        closeModal();
+      }
+    }
+
+    // Modal Event Listeners
+    document.getElementById('modalConfirmBtn').addEventListener('click', submitMaterialAction);
+    document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+
+    // Change Password Form
+    document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      if (formData.new_password !== formData.confirm_password) {
+        document.getElementById('changePasswordMsg').innerHTML = '<span class="error">New passwords do not match</span>';
+        return;
+      }
+      if (!loggedInUser) {
+        document.getElementById('changePasswordMsg').innerHTML = '<span class="error">Please log in to change password</span>';
+        return;
+      }
+      try {
+        const res = await fetch('http://localhost:5000/api/enduser/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: loggedInUser, ...formData }),
+          credentials: 'include'
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned invalid JSON: ${text}`);
+        }
+        const msgDiv = document.getElementById('changePasswordMsg');
+        if (json.success) {
+          msgDiv.innerHTML = '<span class="success">Password changed successfully</span>';
+          e.target.reset();
+        } else {
+          msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+        }
+      } catch (error) {
+        document.getElementById('changePasswordMsg').innerHTML = `<span class="error">Server error: Unable to change password - ${error.message}</span>`;
+      }
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/enduser/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        const text = await res.text();
+        let json;
+        try {
+          json = JSON.parse(text);
+        } catch (parseError) {
+          throw new Error(`Server returned invalid JSON: ${text}`);
+        }
+        const msgDiv = document.getElementById('loginMsg');
+        if (json.success) {
+          loggedInUser = null;
+          document.getElementById('mainContent').style.display = 'none';
+          document.getElementById('login').style.display = 'block';
+          document.getElementById('materialDetails').innerHTML = '';
+          document.getElementById('pendingMaterialsBody').innerHTML = '';
+          document.getElementById('reminderMsg').innerHTML = '';
+          document.getElementById('materialsByIdentifierBody').innerHTML = '';
+          document.getElementById('materialsByIdentifierMsg').innerHTML = '';
+          document.getElementById('sectionSelect').value = '';
+          document.getElementById('usernameSelect').innerHTML = '<option value="">-- Select Username --</option>';
+          msgDiv.innerHTML = '<span class="success">Logged out successfully</span>';
+        } else {
+          msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+        }
+      } catch (error) {
+        document.getElementById('loginMsg').innerHTML = `<span class="error">Logout failed: ${error.message}. Please try again.</span>`;
+      }
+    });
+  </script>
+</body>
+</html>

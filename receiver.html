@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Receiver Portal</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; padding: 20px; }
+    .container { max-width: 1000px; margin: auto; background: #fff; padding: 25px 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); position: relative; }
+    h1, h2 { color: #2c3e50; }
+    select, input, button { width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
+    button { background-color: #3498db; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #2980b9; }
+    .tabs { display: flex; margin-bottom: 20px; }
+    .tab { padding: 10px 20px; cursor: pointer; background-color: #e0e0e0; margin-right: 10px; border-radius: 5px 5px 0 0; }
+    .tab.active { background-color: #3498db; color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .success { color: green; font-weight: bold; margin-top: 10px; }
+    .error { color: red; font-weight: bold; margin-top: 10px; }
+    label { display: block; margin-top: 10px; font-weight: 500; }
+    .material-details { margin-top: 20px; padding: 15px; border: 1px solid #eee; border-radius: 4px; }
+    .material-details p { margin: 5px 0; }
+    .section { margin-top: 20px; padding-top: 12px; border-top: 1px solid #eee; }
+    #logoutBtn { background-color: #e74c3c; padding: 8px 16px; font-size: 14px; position: absolute; top: 10px; right: 10px; width: auto; }
+    #logoutBtn:hover { background-color: #c0392b; }
+    #mainContent { display: none; }
+    #login { display: block; }
+    .conditional-field { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Receiver Portal</h1>
+
+    <!-- Login Section -->
+    <div id="login" class="tab-content active">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <label>Username:
+          <input type="text" name="username" required placeholder="Enter username">
+        </label>
+        <label>Password:
+          <input type="password" name="password" required placeholder="Enter password">
+        </label>
+        <button type="submit">Login</button>
+        <div id="loginMsg"></div>
+      </form>
+    </div>
+
+    <!-- Main Content (Hidden until logged in) -->
+    <div id="mainContent">
+      <button id="logoutBtn">Logout</button>
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('materialEntry', event)">Material Entry</div>
+        <div class="tab" onclick="switchTab('verifyBOTP', event)">Verify OTP from Handler (B)</div>
+        <div class="tab" onclick="switchTab('changePassword', event)">Change Password</div>
+      </div>
+
+      <!-- Material Entry -->
+      <div id="materialEntry" class="tab-content active">
+        <form id="materialForm">
+          <label>Date:
+            <input type="date" name="date" id="materialDate" required>
+          </label>
+          <label>Is PO Available:
+            <select name="po_available" id="poAvailable" required>
+              <option value="">-- Select --</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </label>
+          <div id="poNumberField" class="conditional-field">
+            <label>PO Number:
+              <input type="text" name="po_no">
+            </label>
+          </div>
+          <label>Import Material:
+            <select name="import_material" id="importMaterial" required>
+              <option value="">-- Select --</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </label>
+          <div id="freeOfCostWrapper" class="conditional-field">
+            <label>Free of Cost:
+              <select name="free_of_cost" id="freeOfCost">
+                <option value="">-- Select --</option>
+                <option value="true">Yes</option>
+                <option value="false">No</option>
+              </select>
+            </label>
+          </div>
+          <div id="importDetails" class="conditional-field">
+            <label>BOE Number:
+              <input type="text" name="boe_no">
+            </label>
+            <label>Country of Origin:
+              <input type="text" name="country_of_origin">
+            </label>
+            <label>Custom House Agent (CHA):
+              <input type="text" name="cha">
+            </label>
+          </div>
+          <label>Type of Material:
+            <select name="material_type" id="materialType" required>
+              <option value="">-- Select --</option>
+              <option value="new">New</option>
+              <option value="returnable">Returnable</option>
+            </select>
+          </label>
+          <div id="newMaterialFields" class="conditional-field">
+            <label>Invoice No.:
+              <input type="text" name="invoice_no">
+            </label>
+            <label>Docket No.:
+              <input type="text" name="docket_no">
+            </label>
+          </div>
+          <div id="returnableMaterialField" class="conditional-field">
+            <label>Gate Pass:
+              <input type="text" name="gate_pass">
+            </label>
+          </div>
+          <label>Vendor:
+            <input type="text" name="vendor" required>
+          </label>
+          <label>Courier:
+            <select name="courier" required>
+              <option value="">-- Select --</option>
+              <option value="DTDC">DTDC</option>
+              <option value="DELHIVERY">DELHIVERY</option>
+              <option value="SAFE EXPRESS">SAFE EXPRESS</option>
+              <option value="BLUEDART">BLUEDART</option>
+              <option value="MARK EXPRESS">MARK EXPRESS</option>
+              <option value="SHREE MARUTI">SHREE MARUTI</option>
+              <option value="MAHABALI">MAHABALI</option>
+              <option value="TIRUPATI">TIRUPATI</option>
+              <option value="MAHAVIR">MAHAVIR</option>
+              <option value="ANJANI">ANJANI</option>
+              <option value="NANDAN">NANDAN</option>
+              <option value="GATI COURIER">GATI COURIER</option>
+              <option value="KARGOKART">KARGOKART</option>
+              <option value="TRACKON">TRACKON</option>
+              <option value="PROFESSIONAL">PROFESSIONAL</option>
+              <option value="DIAMOND">DIAMOND</option>
+              <option value="LALJI MULJI">LALJI MULJI</option>
+              <option value="NEW FAST GOODS">NEW FAST GOODS</option>
+              <option value="SURAJ TRANSPORT">SURAJ TRANSPORT</option>
+              <option value="Party">Party</option>
+              <option value="ARCL">ARCL</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <label>Unit of Measurement:
+            <select name="uom" required>
+              <option value="">-- Select --</option>
+              <option value="EA">EA</option>
+              <option value="KG">KG</option>
+              <option value="Ltr">Ltr</option>
+            </select>
+          </label>
+          <label>Over Dimensional Consignment (ODC):
+            <select name="odc" required>
+              <option value="">-- Select --</option>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </label>
+          <label>Section:
+            <select name="section" required>
+              <option value="">-- Select --</option>
+              <option value="20 TPD">20 TPD</option>
+              <option value="45 TPD">45 TPD</option>
+              <option value="30 TPD">30 TPD</option>
+              <option value="60 TPD">60 TPD</option>
+              <option value="100 TPD">100 TPD</option>
+              <option value="Cheese">Cheese</option>
+              <option value="Butter">Butter</option>
+              <option value="Ice-cream">Ice-cream</option>
+              <option value="Paneer">Paneer</option>
+              <option value="Dahi">Dahi</option>
+              <option value="GHEE">GHEE</option>
+              <option value="LMP 1">LMP 1</option>
+              <option value="LMP 2">LMP 2</option>
+              <option value="LMP 3">LMP 3</option>
+              <option value="WTP">WTP</option>
+              <option value="Workshop">Workshop</option>
+              <option value="New UHT">New UHT</option>
+              <option value="Old UHT">Old UHT</option>
+              <option value="Safety">Safety</option>
+              <option value="ETP">ETP</option>
+              <option value="System">System</option>
+              <option value="Refrigeration Banas 1">Refrigeration Banas 1</option>
+              <option value="Refrigeration Banas 2">Refrigeration Banas 2</option>
+              <option value="Boiler Banas 1">Boiler Banas 1</option>
+              <option value="Boiler Banas 2">Boiler Banas 2</option>
+              <option value="Bactoscan Lab">Bactoscan Lab</option>
+              <option value="Main Lab Banas 1">Main Lab Banas 1</option>
+              <option value="Main Lab Banas 2">Main Lab Banas 2</option>
+              <option value="Main Lab Banas 3">Main Lab Banas 3</option>
+              <option value="Reception Lab">Reception Lab</option>
+              <option value="Lab - Whey">Lab - Whey</option>
+              <option value="Lab - Cheese">Lab - Cheese</option>
+              <option value="Lab - Pathology">Lab - Pathology</option>
+              <option value="Lab - 100 TPD">Lab - 100 TPD</option>
+              <option value="Lab - QA">Lab - QA</option>
+              <option value="Micro Lab">Micro Lab</option>
+              <option value="Culture">Culture</option>
+              <option value="Fill Pack 1">Fill Pack 1</option>
+              <option value="Fill Pack 2">Fill Pack 2</option>
+              <option value="Utility">Utility</option>
+              <option value="Store Stock">Store Stock</option>
+              <option value="Automation">Automation</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <label>Material Handler:
+            <select name="handler" id="materialHandlerSelect" required>
+              <option value="">-- Select --</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <label>Number of Parcels/Box:
+            <input type="number" name="parcel_count" required min="1">
+          </label>
+          <button type="submit">Submit Material</button>
+          <div id="materialMsg"></div>
+        </form>
+      </div>
+
+      <!-- Verify OTP from Handler (B) -->
+      <div id="verifyBOTP" class="tab-content">
+        <h2>Verify OTP from Handler (B)</h2>
+        <form id="otpForm">
+          <label>Handler:
+            <select name="handler" id="otpHandlerSelect" required>
+              <option value="">-- Select --</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <label>Identifier Type:
+            <select name="identifier_type" required>
+              <option value="">-- Select --</option>
+              <option value="po_no">PO No</option>
+              <option value="docket_no">Docket No</option>
+              <option value="invoice_no">Invoice No</option>
+              <option value="gate_pass">Gate Pass</option>
+            </select>
+          </label>
+          <label>Identifier Value:
+            <input type="text" name="identifier" required>
+          </label>
+          <label>OTP:
+            <input type="text" name="otp1" required>
+          </label>
+          <button type="submit">Verify OTP</button>
+          <div id="otpMsg"></div>
+        </form>
+      </div>
+
+      <!-- Change Password -->
+      <div id="changePassword" class="tab-content">
+        <h2>Change Password</h2>
+        <form id="changePasswordForm">
+          <label>Username:
+            <input type="text" name="username" id="changePasswordUsername" readonly>
+          </label>
+          <label>Old Password:
+            <input type="password" name="old_password" required>
+          </label>
+          <label>New Password:
+            <input type="password" name="new_password" required>
+          </label>
+          <label>Re-enter New Password:
+            <input type="password" name="confirm_password" required>
+          </label>
+          <button type="submit">Change Password</button>
+          <div id="changePasswordMsg"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let loggedInUser = null;
+
+    // Fetch and populate handlers in dropdowns
+    async function fetchHandlers() {
+      try {
+        const res = await fetch('http://localhost:5000/api/admin/list-handlers', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+        const json = await res.json();
+        const materialSelect = document.getElementById('materialHandlerSelect');
+        const otpSelect = document.getElementById('otpHandlerSelect');
+        
+        // Clear existing options except the static ones
+        materialSelect.innerHTML = '<option value="">-- Select --</option><option value="Other">Other</option>';
+        otpSelect.innerHTML = '<option value="">-- Select --</option><option value="Other">Other</option>';
+
+        if (json.success && json.handlers) {
+          json.handlers.forEach(handler => {
+            const option1 = document.createElement('option');
+            option1.value = handler.username;
+            option1.textContent = handler.username;
+            materialSelect.appendChild(option1);
+
+            const option2 = document.createElement('option');
+            option2.value = handler.username;
+            option2.textContent = handler.username;
+            otpSelect.appendChild(option2);
+          });
+        } else {
+          document.getElementById('materialMsg').innerHTML = '<span class="error">No handlers found or failed to fetch handlers</span>';
+        }
+      } catch (error) {
+        document.getElementById('materialMsg').innerHTML = `<span class="error">Failed to load handlers: ${error.message}</span>`;
+      }
+    }
+
+    function switchTab(tabId, evt) {
+      document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      if (evt && evt.target) evt.target.classList.add('active');
+      if (tabId === 'materialEntry') fetchHandlers();
+      if (tabId === 'verifyBOTP') fetchHandlers();
+      if (tabId === 'changePassword') {
+        document.getElementById('changePasswordUsername').value = loggedInUser;
+      }
+    }
+
+    // Check session on load
+    async function checkSession() {
+      try {
+        const res = await fetch('http://localhost:5000/api/receiver/check-session', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        const json = await res.json();
+        if (json.success) {
+          loggedInUser = json.username;
+          document.getElementById('login').style.display = 'none';
+          document.getElementById('mainContent').style.display = 'block';
+          switchTab('materialEntry');
+          fetchHandlers();
+        }
+      } catch (error) {
+        document.getElementById('loginMsg').innerHTML = `<span class="error">Session error: ${error.message}</span>`;
+      }
+    }
+
+    checkSession();
+
+    // Login Form
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      try {
+        const res = await fetch('http://localhost:5000/api/receiver/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        const msgDiv = document.getElementById('loginMsg');
+        if (json.success) {
+          loggedInUser = json.username;
+          document.getElementById('login').style.display = 'none';
+          document.getElementById('mainContent').style.display = 'block';
+          msgDiv.innerHTML = '<span class="success">Login successful</span>';
+          switchTab('materialEntry');
+          fetchHandlers();
+        } else {
+          msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+        }
+      } catch (error) {
+        document.getElementById('loginMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/receiver/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        const json = await res.json();
+        if (json.success) {
+          loggedInUser = null;
+          document.getElementById('mainContent').style.display = 'none';
+          document.getElementById('login').style.display = 'block';
+          document.getElementById('loginMsg').innerHTML = '<span class="success">Logged out successfully</span>';
+        } else {
+          document.getElementById('loginMsg').innerHTML = `<span class="error">${json.message}</span>`;
+        }
+      } catch (error) {
+        document.getElementById('loginMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    });
+
+    // Material Entry Form
+    document.getElementById('poAvailable').addEventListener('change', function() {
+      document.getElementById('poNumberField').style.display = this.value === 'true' ? 'block' : 'none';
+    });
+
+    document.getElementById('importMaterial').addEventListener('change', function() {
+      const freeWrapper = document.getElementById('freeOfCostWrapper');
+      const importDetails = document.getElementById('importDetails');
+      freeWrapper.style.display = this.value === 'true' ? 'block' : 'none';
+      importDetails.style.display = this.value === 'true' ? 'block' : 'none';
+      if (this.value !== 'true') {
+        document.querySelector('#freeOfCostWrapper select[name="free_of_cost"]').value = '';
+        document.querySelector('#importDetails input[name="boe_no"]').value = '';
+        document.querySelector('#importDetails input[name="country_of_origin"]').value = '';
+        document.querySelector('#importDetails input[name="cha"]').value = '';
+      }
+    });
+
+    document.getElementById('materialType').addEventListener('change', function() {
+      const newMaterialFields = document.getElementById('newMaterialFields');
+      const returnableMaterialField = document.getElementById('returnableMaterialField');
+      newMaterialFields.style.display = this.value === 'new' ? 'block' : 'none';
+      returnableMaterialField.style.display = this.value === 'returnable' ? 'block' : 'none';
+    });
+
+    document.getElementById('materialForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      // Convert date to DD-MM-YYYY
+      if (formData.date) {
+        const [year, month, day] = formData.date.split('-');
+        formData.date = `${day}-${month}-${year}`;
+      }
+      try {
+        const res = await fetch('http://localhost:5000/api/receiver/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        const msgDiv = document.getElementById('materialMsg');
+        if (json.success) {
+          msgDiv.innerHTML = '<span class="success">Material submitted successfully</span>';
+          e.target.reset();
+          fetchHandlers();
+        } else {
+          msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+        }
+      } catch (error) {
+        document.getElementById('materialMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    });
+
+    // OTP Verification Form
+    document.getElementById('otpForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      try {
+        const res = await fetch('http://localhost:5000/api/receiver/verify-otp1', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        const msgDiv = document.getElementById('otpMsg');
+        if (json.success) {
+          msgDiv.innerHTML = '<span class="success">OTP verified successfully</span>';
+          e.target.reset();
+          fetchHandlers();
+        } else {
+          msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+        }
+      } catch (error) {
+        document.getElementById('otpMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    });
+
+    // Change Password Form
+    document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      formData.username = loggedInUser;
+      if (formData.new_password !== formData.confirm_password) {
+        document.getElementById('changePasswordMsg').innerHTML = '<span class="error">New passwords do not match</span>';
+        return;
+      }
+      try {
+        const res = await fetch('http://localhost:5000/api/receiver/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        const msgDiv = document.getElementById('changePasswordMsg');
+        if (json.success) {
+          msgDiv.innerHTML = '<span class="success">Password changed successfully</span>';
+          e.target.reset();
+        } else {
+          msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+        }
+      } catch (error) {
+        document.getElementById('changePasswordMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    });
+  </script>
+</body>
+</html>

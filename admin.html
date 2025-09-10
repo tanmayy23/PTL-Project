@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Portal</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f9;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      background: #fff;
+      padding: 25px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      position: relative;
+    }
+    h1, h2 {
+      color: #2c3e50;
+    }
+    select, input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: #e0e0e0;
+      margin-right: 10px;
+      border-radius: 5px 5px 0 0;
+    }
+    .tab.active {
+      background-color: #3498db;
+      color: white;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 500;
+    }
+    .section {
+      margin-top: 20px;
+      padding-top: 12px;
+      border-top: 1px solid #eee;
+    }
+    .handler-table, .receiver-table, .enduser-table, .credential-table, .dashboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    .handler-table th, .handler-table td, .receiver-table th, .receiver-table td, 
+    .enduser-table th, .enduser-table td, .credential-table th, .credential-table td,
+    .dashboard-table th, .dashboard-table td {
+      border: 1px solid #eee;
+      padding: 8px;
+      text-align: left;
+    }
+    .handler-table th, .receiver-table th, .enduser-table th, 
+    .credential-table th, .dashboard-table th {
+      background-color: #f4f6f9;
+    }
+    .handler-table button, .receiver-table button, .enduser-table button {
+      background-color: #e74c3c;
+      width: auto;
+      padding: 8px 16px;
+    }
+    .handler-table button:hover, .receiver-table button:hover, .enduser-table button:hover {
+      background-color: #c0392b;
+    }
+    #logoutBtn {
+      background-color: #e74c3c;
+      padding: 8px 16px;
+      font-size: 14px;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: auto;
+    }
+    #logoutBtn:hover {
+      background-color: #c0392b;
+    }
+    #mainContent {
+      display: none;
+    }
+    #login {
+      display: block;
+    }
+    .credential-section, .dashboard-section {
+      margin-top: 20px;
+    }
+    canvas {
+      max-width: 100%;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Admin Portal</h1>
+
+    <!-- Login Section -->
+    <div id="login" class="tab-content active">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <label>Username:
+          <input type="text" name="username" required placeholder="Enter username">
+        </label>
+        <label>Password:
+          <input type="password" name="password" required placeholder="Enter password">
+        </label>
+        <button type="submit">Login</button>
+        <div id="loginMsg"></div>
+      </form>
+    </div>
+
+    <!-- Main Content (Hidden until logged in) -->
+    <div id="mainContent">
+      <button id="logoutBtn">Logout</button>
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('receiverManagement', event)">Receiver Management</div>
+        <div class="tab" onclick="switchTab('handlerManagement', event)">Handler Management</div>
+        <div class="tab" onclick="switchTab('endUserManagement', event)">End User Management</div>
+        <div class="tab" onclick="switchTab('userCredentials', event)">User Credentials</div>
+        <div class="tab" onclick="switchTab('changePassword', event)">Change Password</div>
+        <div class="tab" onclick="switchTab('dashboard', event)">Dashboard</div>
+      </div>
+
+      <!-- Receiver Management -->
+      <div id="receiverManagement" class="tab-content active">
+        <h2>Manage Receivers</h2>
+        <form id="addReceiverForm">
+          <label>Receiver Username:
+            <input type="text" name="username" required pattern="[A-Za-z0-9]+" title="Alphanumeric username (e.g., receiverA)">
+          </label>
+          <button type="submit">Add Receiver</button>
+          <div id="receiverMsg"></div>
+        </form>
+        <div class="section">
+          <h3>Existing Receivers</h3>
+          <table class="receiver-table" id="receiverTable">
+            <thead>
+              <tr><th>Username</th><th>Action</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Handler Management -->
+      <div id="handlerManagement" class="tab-content">
+        <h2>Manage Handlers</h2>
+        <form id="addHandlerForm">
+          <label>Handler Username:
+            <input type="text" name="username" required pattern="\d{8}_[A-Za-z\s]+_[A-Za-z\s]+" title="Format: employeeID_Name_Category (e.g., 15001870_DP Kuniya_General)">
+          </label>
+          <button type="submit">Add Handler</button>
+          <div id="handlerMsg"></div>
+        </form>
+        <div class="section">
+          <h3>Existing Handlers</h3>
+          <table class="handler-table" id="handlerTable">
+            <thead>
+              <tr><th>Username</th><th>Action</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- End User Management -->
+      <div id="endUserManagement" class="tab-content">
+        <h2>Manage End Users</h2>
+        <form id="addEndUserForm">
+          <label>Section:
+            <select name="section" required>
+              <option value="">-- Select Section --</option>
+              <option value="100 TPD">100 TPD</option>
+              <option value="OLD UHT">OLD UHT</option>
+              <option value="New UHT">New UHT</option>
+              <option value="20 TPD">20 TPD</option>
+              <option value="30 TPD">30 TPD</option>
+              <option value="45 TPD">45 TPD</option>
+              <option value="Ghee">Ghee</option>
+              <option value="Boiler Banas-1">Boiler Banas-1</option>
+              <option value="QA 1/ETP/NABL">QA 1/ETP/NABL</option>
+              <option value="Workshop">Workshop</option>
+              <option value="Refrigeration B-1">Refrigeration B-1</option>
+              <option value="Utility/66 KV">Utility/66 KV</option>
+              <option value="Utility/Refri-2,3,4">Utility/Refri-2,3,4</option>
+              <option value="WTP/Utility">WTP/Utility</option>
+              <option value="Systems">Systems</option>
+              <option value="Icecream">Icecream</option>
+              <option value="Reception Lab">Reception Lab</option>
+              <option value="Main Lab Banas 3">Main Lab Banas 3</option>
+              <option value="Bactoscan Lab">Bactoscan Lab</option>
+              <option value="Butter">Butter</option>
+              <option value="LMP 2 /LMP 3/ Fillpack 2">LMP 2 /LMP 3/ Fillpack 2</option>
+              <option value="Main lab Banas 2">Main lab Banas 2</option>
+              <option value="60 TPD">60 TPD</option>
+              <option value="100 TPD Lab">100 TPD Lab</option>
+              <option value="Pathogen Lab">Pathogen Lab</option>
+              <option value="Dahi">Dahi</option>
+              <option value="LMP 1/Fillpack 1">LMP 1/Fillpack 1</option>
+              <option value="Safety">Safety</option>
+              <option value="Automation">Automation</option>
+              <option value="Cheese">Cheese</option>
+              <option value="Paneer">Paneer</option>
+              <option value="Whey Lab">Whey Lab</option>
+              <option value="Micro Lab">Micro Lab</option>
+              <option value="Culture">Culture</option>
+              <option value="Cheese Lab">Cheese Lab</option>
+            </select>
+          </label>
+          <label>End User Username:
+            <input type="text" name="username" required pattern="[A-Za-z\s]+" title="Letters and spaces allowed (e.g., John Doe)">
+          </label>
+          <label>Email:
+            <input type="email" name="email" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$" title="Valid email address (e.g., user@domain.com)">
+          </label>
+          <label>Mobile:
+            <input type="text" name="mobile" required pattern="\d{10}" title="10-digit mobile number (e.g., 9876543210)">
+          </label>
+          <label>Employee ID:
+            <input type="text" name="employee_id" required pattern="[A-Za-z0-9]+" title="Alphanumeric employee ID (e.g., EMP123)">
+          </label>
+          <button type="submit">Add End User</button>
+          <div id="endUserMsg"></div>
+        </form>
+        <div class="section">
+          <h3>Existing End Users</h3>
+          <table class="enduser-table" id="endUserTable">
+            <thead>
+              <tr><th>Username</th><th>Section</th><th>Email</th><th>Mobile</th><th>Employee ID</th><th>Action</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- User Credentials -->
+      <div id="userCredentials" class="tab-content">
+        <h2>User Credentials</h2>
+        <div class="credential-section">
+          <h3>Receivers</h3>
+          <table class="credential-table" id="receiverCredentialsTable">
+            <thead>
+              <tr><th>Username</th><th>Password</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="credential-section">
+          <h3>Handlers</h3>
+          <table class="credential-table" id="handlerCredentialsTable">
+            <thead>
+              <tr><th>Username</th><th>Password</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="credential-section">
+          <h3>End Users</h3>
+          <table class="credential-table" id="endUserCredentialsTable">
+            <thead>
+              <tr><th>Username</th><th>Password</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="section">
+          <h3>Change User Password</h3>
+          <form id="changeUserPasswordForm">
+            <label>User Type:
+              <select name="user_type" required onchange="updateUsernameOptions()">
+                <option value="">-- Select User Type --</option>
+                <option value="receiver">Receiver</option>
+                <option value="handler">Handler</option>
+                <option value="enduser">End User</option>
+              </select>
+            </label>
+            <label>Username:
+              <select name="username" id="userCredentialsUsername" required>
+                <option value="">-- Select Username --</option>
+              </select>
+            </label>
+            <label>New Password:
+              <input type="password" name="new_password" required>
+            </label>
+            <label>Re-enter New Password:
+              <input type="password" name="confirm_password" required>
+            </label>
+            <button type="submit">Change Password</button>
+            <div id="changeUserPasswordMsg"></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Change Password -->
+      <div id="changePassword" class="tab-content">
+        <h2>Change Password</h2>
+        <form id="changePasswordForm">
+          <label>Username:
+            <input type="text" name="username" id="changePasswordUsername" readonly>
+          </label>
+          <label>Old Password:
+            <input type="password" name="old_password" required>
+          </label>
+          <label>New Password:
+            <input type="password" name="new_password" required>
+          </label>
+          <label>Re-enter New Password:
+            <input type="password" name="confirm_password" required>
+          </label>
+          <button type="submit">Change Password</button>
+          <div id="changePasswordMsg"></div>
+        </form>
+      </div>
+
+      <!-- Dashboard -->
+      <div id="dashboard" class="tab-content">
+        <h2>Dashboard</h2>
+        <div class="dashboard-section">
+          <h3>Handler Pending Materials (Last 7 Non-Sunday Days)</h3>
+          <canvas id="handlerChart"></canvas>
+        </div>
+        <div class="dashboard-section">
+          <h3>End User Pending Materials (Last 7 Non-Sunday Days)</h3>
+          <canvas id="endUserChart"></canvas>
+        </div>
+        <div class="dashboard-section">
+          <h3>Pending Materials for Handlers</h3>
+          <table class="dashboard-table" id="handlerPendingTable">
+            <thead>
+              <tr><th>ID</th><th>Handler</th><th>PO Number</th><th>Docket Number</th><th>Invoice Number</th><th>Date</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="dashboard-section">
+          <h3>Pending Materials for End Users</h3>
+          <table class="dashboard-table" id="endUserPendingTable">
+            <thead>
+              <tr><th>ID</th><th>End User</th><th>PO Number</th><th>Docket Number</th><th>Invoice Number</th><th>Date</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="dashboard-section">
+          <h3>Export Logs</h3>
+          <form id="exportLogsForm">
+            <label>Start Date:
+              <input type="date" name="start_date" required>
+            </label>
+            <label>End Date:
+              <input type="date" name="end_date" required>
+            </label>
+            <label>User Type:
+              <select name="user_type" required onchange="updateLogUsernameOptions()">
+                <option value="">-- Select User Type --</option>
+                <option value="receiver">Receiver</option>
+                <option value="handler">Handler</option>
+                <option value="enduser">End User</option>
+              </select>
+            </label>
+            <label>Username:
+              <select name="username" id="logUsername" required>
+                <option value="">-- Select Username --</option>
+              </select>
+            </label>
+            <label>Export Format:
+              <select name="format" required>
+                <option value="csv">CSV</option>
+                <option value="pdf">PDF</option>
+              </select>
+            </label>
+            <button type="submit">Export Logs</button>
+            <div id="exportLogsMsg"></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let loggedInUser = null;
+    let handlerChartInstance = null;
+    let endUserChartInstance = null;
+
+    function switchTab(tabId, evt) {
+      document.querySelectorAll('.tab-content').forEach(div => div.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      if (evt && evt.target) evt.target.classList.add('active');
+      if (tabId === 'receiverManagement') fetchReceivers();
+      if (tabId === 'handlerManagement') fetchHandlers();
+      if (tabId === 'endUserManagement') fetchEndUsers();
+      if (tabId === 'userCredentials') fetchAllCredentials();
+      if (tabId === 'changePassword') {
+        document.getElementById('changePasswordUsername').value = loggedInUser;
+      }
+      if (tabId === 'dashboard') {
+        fetchDashboardData();
+      }
+    }
+
+    // Check session on load
+    async function checkSession() {
+      try {
+        const res = await fetch('http://localhost:5000/api/admin/check-session', { credentials: 'include' });
+        const json = await res.json();
+        if (json.success) {
+          loggedInUser = json.username;
+          document.getElementById('login').style.display = 'none';
+          document.getElementById('mainContent').style.display = 'block';
+          switchTab('receiverManagement');
+          fetchReceivers();
+        }
+      } catch (error) {
+        console.error('❌ Error checking session:', error.message);
+      }
+    }
+
+    checkSession();
+
+    // Login Form
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      try {
+        console.log('Submitting login:', formData);
+        const res = await fetch('http://localhost:5000/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        const msgDiv = document.getElementById('loginMsg');
+        if (json.success) {
+          loggedInUser = json.username;
+          document.getElementById('login').style.display = 'none';
+          document.getElementById('mainContent').style.display = 'block';
+          msgDiv.innerHTML = '<span class="success">Login successful</span>';
+          switchTab('receiverManagement');
+          fetchReceivers();
+        } else {
+          msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+        }
+      } catch (error) {
+        console.error('❌ Error logging in:', error.message);
+        document.getElementById('loginMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/admin/logout', {
+          method: 'POST',
+          credentials: 'include'
+        });
+        const json = await res.json();
+        if (json.success) {
+          loggedInUser = null;
+          document.getElementById('mainContent').style.display = 'none';
+          document.getElementById('login').style.display = 'block';
+          if (handlerChartInstance) handlerChartInstance.destroy();
+          if (endUserChartInstance) endUserChartInstance.destroy();
+          document.getElementById('loginMsg').innerHTML = '<span class="success">Logged out successfully</span>';
+        }
+      } catch (error) {
+        console.error('❌ Error logging out:', error.message);
+        document.getElementById('loginMsg').innerHTML = `<span class="error">Logout failed: ${error.message}</span>`;
+      }
+    });
+
+    // Fetch Receivers
+    async function fetchReceivers() {
+      try {
+        const res = await fetch('http://localhost:5000/api/admin/list-receivers', { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+        const json = await res.json();
+        const tbody = document.querySelector('#receiverTable tbody');
+        tbody.innerHTML = '';
+        if (json.success && json.receivers) {
+          json.receivers.forEach(receiver => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${receiver.username}</td>
+              <td><button onclick="deleteReceiver('${receiver.username}')">Delete</button></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="2">No receivers found</td></tr>';
+        }
+      } catch (error) {
+        console.error('❌ Error fetching receivers:', error.message);
+        document.querySelector('#receiverTable tbody').innerHTML = '<tr><td colspan="2">Error loading receivers</td></tr>';
+      }
+    }
+
+    // Add Receiver
+    document.getElementById('addReceiverForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      if (!formData.username.match(/^[A-Za-z0-9]+$/)) {
+        document.getElementById('receiverMsg').innerHTML = '<span class="error">Invalid username format. Use alphanumeric characters only</span>';
+        return;
+      }
+      try {
+        console.log('Adding receiver:', formData);
+        const res = await fetch('http://localhost:5000/api/admin/add-receiver', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: formData.username, password: 'admin' }),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        document.getElementById('receiverMsg').innerHTML =
+          json.success ? `<span class="success">${json.message}</span>` :
+                         `<span class="error">${json.message}</span>`;
+        if (json.success) {
+          document.getElementById('addReceiverForm').reset();
+          fetchReceivers();
+        }
+      } catch (error) {
+        console.error('❌ Error adding receiver:', error.message);
+        document.getElementById('receiverMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    });
+
+    // Delete Receiver
+    async function deleteReceiver(username) {
+      if (!confirm(`Are you sure you want to delete receiver ${username}?`)) return;
+      try {
+        console.log(`Deleting receiver: ${username}`);
+        const res = await fetch('http://localhost:5000/api/admin/delete-receiver', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        document.getElementById('receiverMsg').innerHTML =
+          json.success ? `<span class="success">${json.message}</span>` :
+                         `<span class="error">${json.message}</span>`;
+        if (json.success) fetchReceivers();
+      } catch (error) {
+        console.error('❌ Error deleting receiver:', error.message);
+        document.getElementById('receiverMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    }
+
+    // Fetch Handlers
+    async function fetchHandlers() {
+      try {
+        const res = await fetch('http://localhost:5000/api/admin/list-handlers', { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+        const json = await res.json();
+        const tbody = document.querySelector('#handlerTable tbody');
+        tbody.innerHTML = '';
+        if (json.success && json.handlers) {
+          json.handlers.forEach(handler => {
+            const tr = document.createElement('tr');
+            const displayName = handler.username.replace(/^\d{8}_/, '');
+            tr.innerHTML = `
+              <td>${displayName}</td>
+              <td><button onclick="deleteHandler('${handler.username}')">Delete</button></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="2">No handlers found</td></tr>';
+        }
+      } catch (error) {
+        console.error('❌ Error fetching handlers:', error.message);
+        document.querySelector('#handlerTable tbody').innerHTML = '<tr><td colspan="2">Error loading handlers</td></tr>';
+      }
+    }
+
+    // Add Handler
+    document.getElementById('addHandlerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      if (!formData.username.match(/^\d{8}_[A-Za-z\s]+_[A-Za-z\s]+$/)) {
+        document.getElementById('handlerMsg').innerHTML = '<span class="error">Invalid username format. Use: employeeID_Name_Category</span>';
+        return;
+      }
+      try {
+        console.log('Adding handler:', formData);
+        const res = await fetch('http://localhost:5000/api/admin/add-handler', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: formData.username, password: 'admin' }),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        document.getElementById('handlerMsg').innerHTML =
+          json.success ? `<span class="success">${json.message}</span>` :
+                         `<span class="error">${json.message}</span>`;
+        if (json.success) {
+          document.getElementById('addHandlerForm').reset();
+          fetchHandlers();
+        }
+      } catch (error) {
+        console.error('❌ Error adding handler:', error.message);
+        document.getElementById('handlerMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    });
+
+    // Delete Handler
+    async function deleteHandler(username) {
+      if (!confirm(`Are you sure you want to delete handler ${username}?`)) return;
+      try {
+        console.log(`Deleting handler: ${username}`);
+        const res = await fetch('http://localhost:5000/api/admin/delete-handler', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        document.getElementById('handlerMsg').innerHTML =
+          json.success ? `<span class="success">${json.message}</span>` :
+                         `<span class="error">${json.message}</span>`;
+        if (json.success) fetchHandlers();
+      } catch (error) {
+        console.error('❌ Error deleting handler:', error.message);
+        document.getElementById('handlerMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    }
+
+    // Fetch End Users
+    async function fetchEndUsers() {
+      try {
+        const res = await fetch('http://localhost:5000/api/admin/list-endusers', { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+        const json = await res.json();
+        const tbody = document.querySelector('#endUserTable tbody');
+        tbody.innerHTML = '';
+        if (json.success && json.endusers) {
+          json.endusers.forEach(enduser => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${enduser.username}</td>
+              <td>${enduser.section || 'N/A'}</td>
+              <td>${enduser.email || 'N/A'}</td>
+              <td>${enduser.mobile || 'N/A'}</td>
+              <td>${enduser.employee_id || 'N/A'}</td>
+              <td><button onclick="deleteEndUser('${enduser.username}')">Delete</button></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="6">No end users found</td></tr>';
+        }
+      } catch (error) {
+        console.error('❌ Error fetching end users:', error.message);
+        document.querySelector('#endUserTable tbody').innerHTML = '<tr><td colspan="6">Error loading end users</td></tr>';
+      }
+    }
+
+    // Add End User
+    document.getElementById('addEndUserForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      if (!formData.username.match(/^[A-Za-z\s]+$/)) {
+        document.getElementById('endUserMsg').innerHTML = '<span class="error">Invalid username format. Use letters and spaces only</span>';
+        return;
+      }
+      if (!formData.email.match(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/)) {
+        document.getElementById('endUserMsg').innerHTML = '<span class="error">Invalid email format</span>';
+        return;
+      }
+      if (!formData.mobile.match(/^\d{10}$/)) {
+        document.getElementById('endUserMsg').innerHTML = '<span class="error">Invalid mobile number. Use 10 digits</span>';
+        return;
+      }
+      if (!formData.employee_id.match(/^[A-Za-z0-9]+$/)) {
+        document.getElementById('endUserMsg').innerHTML = '<span class="error">Invalid employee ID format. Use alphanumeric characters only</span>';
+        return;
+      }
+      try {
+        console.log('Adding end user:', formData);
+        const res = await fetch('http://localhost:5000/api/admin/add-enduser', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...formData, password: 'admin' }),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        document.getElementById('endUserMsg').innerHTML =
+          json.success ? `<span class="success">${json.message}</span>` :
+                         `<span class="error">${json.message}</span>`;
+        if (json.success) {
+          document.getElementById('addEndUserForm').reset();
+          fetchEndUsers();
+        }
+      } catch (error) {
+        console.error('❌ Error adding end user:', error.message);
+        document.getElementById('endUserMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    });
+
+    // Delete End User
+    async function deleteEndUser(username) {
+      if (!confirm(`Are you sure you want to delete end user ${username}?`)) return;
+      try {
+        console.log(`Deleting end user: ${username}`);
+        const res = await fetch('http://localhost:5000/api/admin/delete-enduser', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        document.getElementById('endUserMsg').innerHTML =
+          json.success ? `<span class="success">${json.message}</span>` :
+                         `<span class="error">${json.message}</span>`;
+        if (json.success) fetchEndUsers();
+      } catch (error) {
+        console.error('❌ Error deleting end user:', error.message);
+        document.getElementById('endUserMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    }
+
+    // Fetch All Credentials
+    async function fetchAllCredentials() {
+      await Promise.all([fetchReceiverCredentials(), fetchHandlerCredentials(), fetchEndUserCredentials()]);
+    }
+
+    // Fetch Receiver Credentials
+    async function fetchReceiverCredentials() {
+      try {
+        console.log('Fetching receiver credentials');
+        const res = await fetch('http://localhost:5000/api/admin/list-receiver-credentials', { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+        const json = await res.json();
+        const tbody = document.querySelector('#receiverCredentialsTable tbody');
+        tbody.innerHTML = '';
+        if (json.success && json.receivers) {
+          json.receivers.forEach(receiver => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${receiver.username}</td><td>${receiver.password}</td>`;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="2">No receivers found</td></tr>';
+        }
+      } catch (error) {
+        console.error('❌ Error fetching receiver credentials:', error.message);
+        document.querySelector('#receiverCredentialsTable tbody').innerHTML = '<tr><td colspan="2">Error loading receiver credentials</td></tr>';
+      }
+    }
+
+    // Fetch Handler Credentials
+    async function fetchHandlerCredentials() {
+      try {
+        console.log('Fetching handler credentials');
+        const res = await fetch('http://localhost:5000/api/admin/list-handler-credentials', { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+        const json = await res.json();
+        const tbody = document.querySelector('#handlerCredentialsTable tbody');
+        tbody.innerHTML = '';
+        if (json.success && json.handlers) {
+          json.handlers.forEach(handler => {
+            const tr = document.createElement('tr');
+            const displayName = handler.username.replace(/^\d{8}_/, '');
+            tr.innerHTML = `<td>${displayName}</td><td>${handler.password}</td>`;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="2">No handlers found</td></tr>';
+        }
+      } catch (error) {
+        console.error('❌ Error fetching handler credentials:', error.message);
+        document.querySelector('#handlerCredentialsTable tbody').innerHTML = '<tr><td colspan="2">Error loading handler credentials</td></tr>';
+      }
+    }
+
+    // Fetch End User Credentials
+    async function fetchEndUserCredentials() {
+      try {
+        console.log('Fetching end user credentials');
+        const res = await fetch('http://localhost:5000/api/admin/list-enduser-credentials', { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+        const json = await res.json();
+        const tbody = document.querySelector('#endUserCredentialsTable tbody');
+        tbody.innerHTML = '';
+        if (json.success && json.endusers) {
+          json.endusers.forEach(enduser => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${enduser.username}</td><td>${enduser.password}</td>`;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = '<tr><td colspan="2">No end users found</td></tr>';
+        }
+      } catch (error) {
+        console.error('❌ Error fetching end user credentials:', error.message);
+        document.querySelector('#endUserCredentialsTable tbody').innerHTML = '<tr><td colspan="2">Error loading end user credentials</td></tr>';
+      }
+    }
+
+    // Update Username Options for Password Change
+    async function updateUsernameOptions() {
+      const userType = document.querySelector('#changeUserPasswordForm [name="user_type"]').value;
+      const usernameSelect = document.getElementById('userCredentialsUsername');
+      usernameSelect.innerHTML = '<option value="">-- Select Username --</option>';
+      if (!userType) return;
+      let endpoint = '/api/admin/list-';
+      if (userType === 'enduser') {
+        endpoint += 'endusers';
+      } else if (userType === 'handler') {
+        endpoint += 'handlers';
+      } else {
+        endpoint += userType + 's';
+      }
+      try {
+        console.log(`Fetching ${userType} usernames for password change from ${endpoint}`);
+        const res = await fetch(`http://localhost:5000${endpoint}`, { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+        const json = await res.json();
+        const key = userType === 'enduser' ? 'endusers' : userType === 'handler' ? 'handlers' : userType + 's';
+        if (json.success && json[key]) {
+          json[key].forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.username;
+            option.textContent = user.username.replace(/^\d{8}_/, '');
+            usernameSelect.appendChild(option);
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error fetching usernames for password change:', error.message);
+        document.getElementById('changeUserPasswordMsg').innerHTML = `<span class="error">Error loading usernames: ${error.message}</span>`;
+      }
+    }
+
+    // Update Username Options for Export Logs
+    async function updateLogUsernameOptions() {
+      const userType = document.querySelector('#exportLogsForm [name="user_type"]').value;
+      const usernameSelect = document.getElementById('logUsername');
+      usernameSelect.innerHTML = '<option value="">-- Select Username --</option>';
+      if (!userType) return;
+      let endpoint = '/api/admin/list-';
+      if (userType === 'enduser') {
+        endpoint += 'endusers';
+      } else if (userType === 'handler') {
+        endpoint += 'handlers';
+      } else {
+        endpoint += userType + 's';
+      }
+      try {
+        console.log(`Fetching ${userType} usernames for export logs from ${endpoint}`);
+        const res = await fetch(`http://localhost:5000${endpoint}`, { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+        const json = await res.json();
+        const key = userType === 'enduser' ? 'endusers' : userType === 'handler' ? 'handlers' : userType + 's';
+        if (json.success && json[key]) {
+          json[key].forEach(user => {
+            const option = document.createElement('option');
+            option.value = user.username;
+            option.textContent = user.username.replace(/^\d{8}_/, '');
+            usernameSelect.appendChild(option);
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error fetching usernames for export logs:', error.message);
+        document.getElementById('exportLogsMsg').innerHTML = `<span class="error">Error loading usernames: ${error.message}</span>`;
+      }
+    }
+
+    // Change User Password
+    document.getElementById('changeUserPasswordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      if (formData.new_password !== formData.confirm_password) {
+        document.getElementById('changeUserPasswordMsg').innerHTML = '<span class="error">New passwords do not match</span>';
+        return;
+      }
+      try {
+        console.log('Changing user password:', formData);
+        const res = await fetch('http://localhost:5000/api/admin/change-user-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        document.getElementById('changeUserPasswordMsg').innerHTML =
+          json.success ? `<span class="success">${json.message}</span>` :
+                         `<span class="error">${json.message}</span>`;
+        if (json.success) {
+          document.getElementById('changeUserPasswordForm').reset();
+          document.getElementById('userCredentialsUsername').innerHTML = '<option value="">-- Select Username --</option>';
+          fetchAllCredentials();
+        }
+      } catch (error) {
+        console.error('❌ Error changing user password:', error.message);
+        document.getElementById('changeUserPasswordMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    });
+
+    // Change Admin Password
+    document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      formData.username = loggedInUser;
+      if (formData.new_password !== formData.confirm_password) {
+        document.getElementById('changePasswordMsg').innerHTML = '<span class="error">New passwords do not match</span>';
+        return;
+      }
+      try {
+        console.log('Changing admin password for:', formData.username);
+        const res = await fetch('http://localhost:5000/api/admin/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        document.getElementById('changePasswordMsg').innerHTML =
+          json.success ? `<span class="success">${json.message}</span>` :
+                         `<span class="error">${json.message}</span>`;
+        if (json.success) {
+          document.getElementById('changePasswordForm').reset();
+        }
+      } catch (error) {
+        console.error('❌ Error changing admin password:', error.message);
+        document.getElementById('changePasswordMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    });
+
+    // Render Charts
+    function renderCharts(data) {
+      if (handlerChartInstance) handlerChartInstance.destroy();
+      if (endUserChartInstance) endUserChartInstance.destroy();
+
+      handlerChartInstance = new Chart(document.getElementById('handlerChart'), {
+        type: 'bar',
+        data: {
+          labels: data.dates,
+          datasets: [{
+            label: 'Pending Materials for Handlers',
+            data: data.handlerCounts,
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Count' } },
+            x: { title: { display: true, text: 'Date' } }
+          }
+        }
+      });
+
+      endUserChartInstance = new Chart(document.getElementById('endUserChart'), {
+        type: 'bar',
+        data: {
+          labels: data.dates,
+          datasets: [{
+            label: 'Pending Materials for End Users',
+            data: data.endUserCounts,
+            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true, title: { display: true, text: 'Count' } },
+            x: { title: { display: true, text: 'Date' } }
+          }
+        }
+      });
+    }
+
+    // Populate Pending Tables
+    function populatePendingTables(data) {
+      const handlerTbody = document.querySelector('#handlerPendingTable tbody');
+      handlerTbody.innerHTML = '';
+      if (data.handlerPending && data.handlerPending.length > 0) {
+        data.handlerPending.forEach(item => {
+          const tr = document.createElement('tr');
+          const displayName = item.handler.replace(/^\d{8}_/, '');
+          tr.innerHTML = `
+            <td>${item.id}</td>
+            <td>${displayName}</td>
+            <td>${item.po_no || 'N/A'}</td>
+            <td>${item.docket_no || 'N/A'}</td>
+            <td>${item.invoice_no || 'N/A'}</td>
+            <td>${item.day}</td>
+          `;
+          handlerTbody.appendChild(tr);
+        });
+      } else {
+        handlerTbody.innerHTML = '<tr><td colspan="6">No pending materials for handlers</td></tr>';
+      }
+
+      const endUserTbody = document.querySelector('#endUserPendingTable tbody');
+      endUserTbody.innerHTML = '';
+      if (data.endUserPending && data.endUserPending.length > 0) {
+        data.endUserPending.forEach(item => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${item.id}</td>
+            <td>${item.end_user}</td>
+            <td>${item.po_no || 'N/A'}</td>
+            <td>${item.docket_no || 'N/A'}</td>
+            <td>${item.invoice_no || 'N/A'}</td>
+            <td>${item.day}</td>
+          `;
+          endUserTbody.appendChild(tr);
+        });
+      } else {
+        endUserTbody.innerHTML = '<tr><td colspan="6">No pending materials for end users</td></tr>';
+      }
+    }
+
+    // Fetch Dashboard Data
+    async function fetchDashboardData() {
+      try {
+        console.log('Fetching dashboard data');
+        const res = await fetch('http://localhost:5000/api/admin/dashboard-data', { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
+        const json = await res.json();
+        if (json.success) {
+          renderCharts(json.data);
+          populatePendingTables(json.data);
+        } else {
+          document.getElementById('handlerChart').parentNode.innerHTML = '<p class="error">Failed to load dashboard data</p>';
+          document.getElementById('endUserChart').parentNode.innerHTML = '<p class="error">Failed to load dashboard data</p>';
+          document.querySelector('#handlerPendingTable tbody').innerHTML = '<tr><td colspan="6">Error loading data</td></tr>';
+          document.querySelector('#endUserPendingTable tbody').innerHTML = '<tr><td colspan="6">Error loading data</td></tr>';
+        }
+      } catch (error) {
+        console.error('❌ Error fetching dashboard data:', error.message);
+        document.getElementById('handlerChart').parentNode.innerHTML = '<p class="error">Error loading dashboard data</p>';
+        document.getElementById('endUserChart').parentNode.innerHTML = '<p class="error">Error loading dashboard data</p>';
+        document.querySelector('#handlerPendingTable tbody').innerHTML = '<tr><td colspan="6">Error loading data</td></tr>';
+        document.querySelector('#endUserPendingTable tbody').innerHTML = '<tr><td colspan="6">Error loading data</td></tr>';
+      }
+    }
+
+    // Export Logs
+    document.getElementById('exportLogsForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+      try {
+        console.log('Exporting logs:', formData);
+        const res = await fetch('http://localhost:5000/api/admin/export-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+          credentials: 'include'
+        });
+        const json = await res.json();
+        const msgDiv = document.getElementById('exportLogsMsg');
+        if (json.success) {
+          if (json.message) {
+            msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+            return;
+          }
+          if (formData.format === 'csv' && json.data.csv) {
+            const blob = new Blob([json.data.csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${formData.user_type}_${formData.username}_logs.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            msgDiv.innerHTML = '<span class="success">Logs exported successfully</span>';
+          } else if (formData.format === 'pdf' && json.data.logs && json.data.logs.length > 0) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text(`Activity Logs for ${formData.user_type} ${formData.username}`, 14, 20);
+            doc.text(`From ${formData.start_date} to ${formData.end_date}`, 14, 30);
+            doc.autoTable({
+              startY: 40,
+              head: [['ID', 'Username', 'Action', 'Details', 'Timestamp']],
+              body: json.data.logs.map(log => [
+                log.id,
+                log.username.replace(/^\d{8}_/, ''),
+                log.action,
+                log.details,
+                new Date(log.timestamp).toLocaleString()
+              ])
+            });
+            doc.save(`${formData.user_type}_${formData.username}_logs.pdf`);
+            msgDiv.innerHTML = '<span class="success">Logs exported successfully</span>';
+          } else {
+            msgDiv.innerHTML = '<span class="error">No logs found for the specified user and date range</span>';
+          }
+        } else {
+          msgDiv.innerHTML = `<span class="error">${json.message}</span>`;
+        }
+      } catch (error) {
+        console.error('❌ Error exporting logs:', error.message);
+        document.getElementById('exportLogsMsg').innerHTML = `<span class="error">Server error: ${error.message}</span>`;
+      }
+    });
+  </script>
+</body>
+</html>

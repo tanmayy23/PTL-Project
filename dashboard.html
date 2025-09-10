@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Handler Pending Materials Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f9;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1400px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .table-container {
+      width: 100%;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #ddd;
+      font-size: 14px;
+    }
+    th {
+      background-color: #2c3e50;
+      color: #ffffff;
+      font-weight: bold;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    td {
+      background-color: #3498db;
+      color: #ffffff;
+    }
+    td.pending {
+      background-color: #e74c3c;
+      color: #ffffff;
+    }
+    th.handler-name, td.handler-name {
+      min-width: 250px;
+      max-width: 300px;
+      white-space: normal;
+      word-wrap: break-word;
+    }
+    .loading, .error, .no-data {
+      text-align: center;
+      font-size: 16px;
+      color: #2c3e50;
+      margin-top: 20px;
+    }
+    .error {
+      color: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>COURIER PENDENCY STATUS</h1>
+    <div class="table-container">
+      <div id="matrixTable"><p class="loading">Loading dashboard data...</p></div>
+    </div>
+  </div>
+
+  <script>
+    async function loadMatrix() {
+      const container = document.getElementById('matrixTable');
+      container.innerHTML = '<p class="loading">Loading dashboard data...</p>';
+
+      try {
+        console.log('Fetching dashboard matrix data...');
+        const res = await fetch('http://localhost:5000/api/dashboard/matrix', {
+          method: 'GET',
+          credentials: 'include'
+        });
+        console.log(`Matrix fetch response status: ${res.status}`);
+        const text = await res.text();
+        console.log('Matrix fetch raw response:', text);
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch (parseError) {
+          console.error('Failed to parse matrix response:', parseError.message);
+          container.innerHTML = '<p class="error">Failed to parse server response. Please try again.</p>';
+          return;
+        }
+
+        if (!result.success) {
+          console.error('Server returned error:', result.message || 'Invalid response');
+          container.innerHTML = `<p class="error">${result.message || 'Failed to load dashboard data'}</p>`;
+          return;
+        }
+
+        const { handlers, dates, matrix } = result.data;
+        if (!handlers?.length || !dates?.length || !matrix?.length) {
+          console.warn('No data available: handlers, dates, or matrix is empty');
+          container.innerHTML = '<p class="no-data">No pending materials found for the selected period.</p>';
+          return;
+        }
+
+        // Build table
+        let html = '<table>';
+        // Header row
+        html += '<tr><th class="handler-name">Handler</th><th>Total Pendency</th>';
+        dates.forEach(date => {
+          html += `<th>${date}</th>`;
+        });
+        html += '</tr>';
+
+        // Data rows
+        matrix.forEach(row => {
+          html += `<tr><th class="handler-name" title="${row.handler}">${row.displayName}</th><td class="${row.totalPending > 0 ? 'pending' : ''}">${row.totalPending}</td>`;
+          row.counts.forEach(count => {
+            html += `<td class="${count > 0 ? 'pending' : ''}">${count}</td>`;
+          });
+          html += '</tr>';
+        });
+
+        html += '</table>';
+        container.innerHTML = html;
+      } catch (error) {
+        console.error('Error loading matrix:', error.message, error.stack);
+        container.innerHTML = '<p class="error">Failed to load dashboard data: ' + error.message + '</p>';
+      }
+    }
+
+    // Load matrix on page load and every few minutes
+    document.addEventListener('DOMContentLoaded', () => {
+      loadMatrix();
+      const refreshInterval = setInterval(loadMatrix, 30000);
+      window.addEventListener('beforeunload', () => clearInterval(refreshInterval));
+    });
+  </script>
+</body>
+</html>
