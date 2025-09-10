@@ -9,7 +9,7 @@ The project involves the design, development, and deployment of a digital platfo
 
 
 
-1. Eliminate manual registers for material tracking
+1\. Eliminate manual registers for material tracking
 
 2\. Enable real-time visibility of PTL material status
 
@@ -29,7 +29,7 @@ The project involves the design, development, and deployment of a digital platfo
 
 
 
-1. Frontend: React.js + Tailwind CSS
+1\. Frontend: React.js + Tailwind CSS
 
 2\. Backend: Node.js 
 
