@@ -37,11 +37,8 @@ The project involves the design, development, and deployment of a digital platfo
 
 4\. Notifications: OTP
 
-5\. Auth: JWT-based session with OTP verification
+5\. Reporting: Node-based CSV/Excel generator
 
-6\. Reporting: Node-based CSV/Excel generator
-
-7\. Hosting: AWS EC2 / ECS + S3 for file storage
 
 
 
