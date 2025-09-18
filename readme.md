@@ -2,7 +2,7 @@
 
 
 
-The project involves the design, development, and deployment of a digital platform for streamlining and digitizing the PTL (Part Truck Load) material flow process at Banas Dairy’s General Store. The system aims to digitize all manual processes involving the receipt, handling, and user acceptance of PTL materials.
+The project involves the design, development, and deployment of a digital platform for streamlining and digitizing the PTL (Part Truck Load) material flow process at Banas General Store. The system aims to digitize all manual processes involving the receipt, handling, and user acceptance of PTL materials. 
 
 
 **Goals and Objectives**
@@ -23,19 +23,21 @@ The project involves the design, development, and deployment of a digital platfo
 
 7\. Design scalable architecture for use across all plants
 
+8\. Designing the dashboards for better understanding of the product status and handler availability. 
+
 
 
 **The tech stack that can be used for the project is the following:**
 
 
 
-1\. Frontend: React.js + Tailwind CSS
+1\. Frontend: HTML, CSS, JavaScript
 
-2\. Backend: Node.js 
+2\. Backend: Node.js (Express.js) 
 
 3\. Database: PostgreSQL (transactional)
 
-4\. Notifications: OTP
+4\. Notifications: OTP (Within the portal)
 
 5\. Reporting: Node-based CSV/Excel generator
 
